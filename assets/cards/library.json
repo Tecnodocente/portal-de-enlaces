@@ -1,0 +1,54 @@
+{
+  "items": [
+    {
+      "file": "alumnado.webp",
+      "label": "Alumnado",
+      "categories": ["alumnado", "estudiante", "tutoría", "orientación"]
+    },
+    {
+      "file": "incidencias.webp",
+      "label": "Incidencias",
+      "categories": ["incidencia", "aviso", "parte"]
+    },
+    {
+      "file": "mantenimiento.webp",
+      "label": "Mantenimiento",
+      "categories": ["mantenimiento", "reparación", "taller"]
+    },
+    {
+      "file": "comunidad.webp",
+      "label": "Convivencia",
+      "categories": ["convivencia", "comunidad", "familia", "claustro"]
+    },
+    {
+      "file": "espacios.webp",
+      "label": "Espacios",
+      "categories": ["espacio", "aula", "reserva", "instalación"]
+    },
+    {
+      "file": "organizacion.webp",
+      "label": "Organización",
+      "categories": ["organización", "gestión", "calendario", "secretaría"]
+    },
+    {
+      "file": "formularios.webp",
+      "label": "Formularios",
+      "categories": ["formulario", "encuesta", "solicitud"]
+    },
+    {
+      "file": "recursos.webp",
+      "label": "Recursos",
+      "categories": ["recurso", "docencia", "aprendizaje", "biblioteca"]
+    },
+    {
+      "file": "digital.webp",
+      "label": "Aplicaciones externas",
+      "categories": ["digital", "tic", "plataforma", "aplicación", "herramienta"]
+    },
+    {
+      "file": "documentacion.webp",
+      "label": "Documentación",
+      "categories": ["documentación", "documento", "archivo", "normativa"]
+    }
+  ]
+}

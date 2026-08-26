@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#12223f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Portal de enlaces">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; worker-src 'self'; manifest-src 'self'; form-action 'self'">
+  <title>Portal de enlaces</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./assets/branding/favicon.png">
+  <link rel="apple-touch-icon" href="./assets/branding/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="portal-root" class="portal-shell" aria-live="polite">
+    <div class="portal-shell__card">
+      <div class="portal-shell__dot" aria-hidden="true"></div>
+      <strong>Preparando tu portal…</strong>
+    </div>
+  </div>
+  <noscript>Necesitas activar JavaScript para usar el Portal de enlaces.</noscript>
+  <script src="./config.js" defer></script>
+  <script src="./portal-core.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
