@@ -2,12 +2,17 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.1.0';
+  const LOADED_APP_VERSION = '2.2.0';
   let REMOTE_VERSION = LOADED_APP_VERSION;
   const VERSION_CHECK_MS = 3 * 60 * 1000;
   const VERSION_RETRY_MS = 15 * 1000;
   const UPDATE_COOLDOWN_MS = 2 * 60 * 1000;
   const UPDATE_ATTEMPT_KEY = 'portal-version-update-attempt';
+  const DATA_CHECK_MS = 90 * 1000;
+  const DATA_CHECK_THROTTLE_MS = 15 * 1000;
+  const DRAG_START_PX = 14;
+  const SWIPE_NAV_PX = 46;
+  const CARD_ACCENTS = ['cobalt', 'terracotta', 'sage', 'gold', 'violet', 'teal'];
   const BUILTIN_LIBRARY = [
     { file: 'alumnado.webp', label: 'Alumnado', categories: ['alumnado', 'estudiante', 'tutoría', 'orientación'] },
     { file: 'incidencias.webp', label: 'Incidencias', categories: ['incidencia', 'aviso', 'parte'] },
@@ -35,6 +40,16 @@
     library: [],
     adminLinks: [],
     adminUsers: [],
+    adminLinksLoaded: false,
+    adminUsersLoaded: false,
+    adminLinksRevision: '',
+    adminUsersRevision: '',
+    adminActiveTab: 'links',
+    adminFormOpen: false,
+    adminRefreshPending: false,
+    dataRevision: '',
+    dataCheckPending: false,
+    lastDataCheck: 0,
     mainNeedsRefresh: false,
     versionCheckPending: false,
     lastVersionCheck: 0,
@@ -75,6 +90,9 @@
     state.sessionToken = '';
     state.user = null;
     state.links = [];
+    state.dataRevision = '';
+    state.adminLinksLoaded = false;
+    state.adminUsersLoaded = false;
   }
 
   async function requestApi(action, payload, token) {
@@ -216,9 +234,7 @@
       if (!data || !data.user || !data.user.email) {
         throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto los datos de sesión esperados.');
       }
-      state.user = data.user;
-      state.links = Array.isArray(data.links) ? data.links : [];
-      state.current = 0;
+      applyBootstrapData(data, false);
       renderApp();
     } catch (error) {
       clearSession();
@@ -228,6 +244,15 @@
         renderStatus('No se ha podido entrar', humanError(error), 'Volver');
       }
     }
+  }
+
+  function applyBootstrapData(data, preserveCurrent) {
+    const currentId = preserveCurrent && state.links[state.current] ? state.links[state.current].id : '';
+    state.user = data.user;
+    state.links = Array.isArray(data.links) ? data.links : [];
+    state.dataRevision = String(data.dataRevision || state.dataRevision || '');
+    const preservedIndex = currentId ? state.links.findIndex(function (link) { return link.id === currentId; }) : -1;
+    state.current = preservedIndex >= 0 ? preservedIndex : 0;
   }
 
   function renderApp() {
@@ -283,6 +308,7 @@
       const card = el('button', 'link-card');
       card.type = 'button';
       card.dataset.index = String(index);
+      card.classList.add('link-card--accent-' + cardAccent(link));
       card.setAttribute('aria-label', 'Abrir ' + link.title);
       const media = el('span', 'link-card__media');
       const image = el('img', 'link-card__image');
@@ -296,9 +322,16 @@
       const veil = el('span', 'link-card__veil');
       media.append(image, veil);
       const body = el('span', 'link-card__body');
-      const category = el('span', 'link-card__category', link.category || 'Enlace');
-      const title = el('span', 'link-card__title', link.title);
-      body.append(category, title);
+      const identity = el('span', 'link-card__identity');
+      const monogram = el('span', 'link-card__monogram', cardMonogram(link.title));
+      monogram.setAttribute('aria-hidden', 'true');
+      const identityText = el('span', 'link-card__identity-text');
+      identityText.append(el('span', 'link-card__category', link.category || 'Enlace'));
+      const service = cardService(link);
+      if (service) identityText.append(el('span', 'link-card__service', service));
+      identity.append(monogram, identityText);
+      const title = el('span', 'link-card__title ' + titleLengthClass(link.title), link.title);
+      body.append(identity, title);
       if (link.description) body.append(el('span', 'link-card__description', link.description));
       body.append(el('span', 'link-card__action', 'Abrir enlace ↗'));
       card.append(media, body);
@@ -338,6 +371,45 @@
     return section;
   }
 
+  function titleLengthClass(value) {
+    const length = String(value || '').trim().length;
+    if (length <= 24) return 'link-card__title--short';
+    if (length <= 48) return 'link-card__title--medium';
+    if (length <= 72) return 'link-card__title--long';
+    return 'link-card__title--very-long';
+  }
+
+  function stableHash(value) {
+    const text = String(value || '');
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function cardAccent(link) {
+    return CARD_ACCENTS[stableHash((link.id || '') + '|' + (link.title || '')) % CARD_ACCENTS.length];
+  }
+
+  function cardMonogram(title) {
+    const words = String(title || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '↗';
+    return (words[0].charAt(0) + (words.length > 1 ? words[1].charAt(0) : words[0].charAt(1))).toUpperCase();
+  }
+
+  function cardService(link) {
+    let host = '';
+    try { host = new URL(String(link.url || '')).hostname.toLowerCase(); } catch (_) {}
+    if (host === 'docs.google.com' && /\/forms\//i.test(String(link.url || ''))) return 'Google Forms';
+    if (host === 'drive.google.com' || host === 'docs.google.com') return 'Google';
+    if (host.indexOf('seneca') !== -1) return 'Séneca';
+    if (host.indexOf('moodle') !== -1) return 'Moodle';
+    if (host.indexOf('canva.com') !== -1) return 'Canva';
+    return '';
+  }
+
   function updateCarousel() {
     const total = state.links.length;
     state.cardNodes.forEach(function (card, index) {
@@ -369,32 +441,54 @@
 
   function attachDrag(viewport, track) {
     let startX = 0;
+    let startY = 0;
     let deltaX = 0;
+    let deltaY = 0;
+    let pointerActive = false;
     let dragging = false;
+    let pointerId = null;
     viewport.addEventListener('pointerdown', function (event) {
-      dragging = true;
+      if (!event.isPrimary || event.button !== 0) return;
+      pointerActive = true;
+      dragging = false;
+      pointerId = event.pointerId;
       startX = event.clientX;
+      startY = event.clientY;
       deltaX = 0;
-      viewport.setPointerCapture(event.pointerId);
-      viewport.classList.add('is-dragging');
+      deltaY = 0;
     });
     viewport.addEventListener('pointermove', function (event) {
-      if (!dragging) return;
+      if (!pointerActive || event.pointerId !== pointerId) return;
       deltaX = event.clientX - startX;
+      deltaY = event.clientY - startY;
+      if (!dragging) {
+        const horizontalDrag = core && typeof core.isHorizontalDrag === 'function'
+          ? core.isHorizontalDrag(deltaX, deltaY, DRAG_START_PX)
+          : Math.abs(deltaX) >= DRAG_START_PX && Math.abs(deltaX) > Math.abs(deltaY);
+        if (!horizontalDrag) return;
+        dragging = true;
+        viewport.setPointerCapture(pointerId);
+        viewport.classList.add('is-dragging');
+      }
+      event.preventDefault();
       track.style.transform = 'translateX(' + Math.max(-70, Math.min(70, deltaX * 0.18)) + 'px)';
     });
-    function finish() {
-      if (!dragging) return;
+    function finish(event, cancelled) {
+      if (!pointerActive || event.pointerId !== pointerId) return;
+      pointerActive = false;
+      if (!dragging) { pointerId = null; return; }
       dragging = false;
       viewport.classList.remove('is-dragging');
       track.style.transform = '';
-      if (Math.abs(deltaX) > 10) state.suppressClickUntil = Date.now() + 550;
-      if (core ? core.isNavigationSwipe(deltaX, 45) : Math.abs(deltaX) > 45) {
+      state.suppressClickUntil = Date.now() + 550;
+      if (viewport.hasPointerCapture(pointerId)) viewport.releasePointerCapture(pointerId);
+      if (!cancelled && (core ? core.isNavigationSwipe(deltaX, SWIPE_NAV_PX) : Math.abs(deltaX) > SWIPE_NAV_PX)) {
         moveCarousel(deltaX > 0 ? -1 : 1);
       }
+      pointerId = null;
     }
-    viewport.addEventListener('pointerup', finish);
-    viewport.addEventListener('pointercancel', finish);
+    viewport.addEventListener('pointerup', function (event) { finish(event, false); });
+    viewport.addEventListener('pointercancel', function (event) { finish(event, true); });
   }
 
   function resolveVisual(visual) {
@@ -411,9 +505,14 @@
       showToast('Este enlace no tiene una dirección segura.', true);
       return;
     }
-    const opened = window.open(url, '_blank', 'noopener,noreferrer');
-    if (opened) opened.opener = null;
-    else window.location.assign(url);
+    const anchor = document.createElement('a');
+    anchor.href = String(url);
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.hidden = true;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
   }
 
   async function logout() {
@@ -565,22 +664,37 @@
   }
 
   async function selectAdminTab(tab) {
+    state.adminActiveTab = tab;
+    state.adminFormOpen = false;
+    state.adminRefreshPending = false;
     document.querySelectorAll('.admin-tab').forEach(function (node) {
       node.classList.toggle('is-active', node.dataset.tab === tab);
     });
     const content = document.getElementById('admin-content');
     if (!content) return;
     clear(content);
+    const hasFreshLinks = tab === 'links' && state.adminLinksLoaded && state.adminLinksRevision === state.dataRevision;
+    const hasFreshUsers = tab === 'users' && state.adminUsersLoaded && state.adminUsersRevision === state.dataRevision;
+    if (hasFreshLinks) { renderAdminLinks(); return; }
+    if (hasFreshUsers) { renderAdminUsers(); return; }
     content.append(el('p', 'admin-loading', 'Cargando…'));
     try {
       if (tab === 'links') {
         const results = await Promise.all([api('admin.listLinks'), loadLibrary()]);
-        state.adminLinks = Array.isArray(results[0]) ? results[0] : [];
+        const response = results[0];
+        if (!response || !Array.isArray(response.links)) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el listado de enlaces esperado.');
+        state.adminLinks = response.links;
+        state.adminLinksLoaded = true;
+        state.adminLinksRevision = String(response.dataRevision || state.dataRevision);
+        state.dataRevision = state.adminLinksRevision;
         renderAdminLinks();
       } else {
-        const users = await api('admin.listUsers');
-        if (!Array.isArray(users)) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el listado de usuarios esperado.');
-        state.adminUsers = users;
+        const response = await api('admin.listUsers');
+        if (!response || !Array.isArray(response.users)) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el listado de usuarios esperado.');
+        state.adminUsers = response.users;
+        state.adminUsersLoaded = true;
+        state.adminUsersRevision = String(response.dataRevision || state.dataRevision);
+        state.dataRevision = state.adminUsersRevision;
         renderAdminUsers();
       }
     } catch (error) {
@@ -605,6 +719,7 @@
   }
 
   function renderAdminLinks() {
+    state.adminFormOpen = false;
     const content = document.getElementById('admin-content');
     clear(content);
     const toolbar = el('div', 'admin-toolbar');
@@ -636,6 +751,7 @@
   }
 
   function renderLinkForm(link) {
+    state.adminFormOpen = true;
     const content = document.getElementById('admin-content');
     clear(content);
     const form = el('form', 'link-form');
@@ -663,7 +779,7 @@
     active.checked = link ? link.active : true;
     activeWrap.append(active, el('span', '', 'Enlace activo'));
 
-    const visualTitle = el('p', 'field__label visual-heading', 'Imagen de la biblioteca');
+    const visualTitle = el('p', 'field__label visual-heading', 'Fotografía de fondo');
     const visuals = el('div', 'visual-picker');
     const currentVisual = link ? link.visual : suggestVisual(categoryInput.value);
     state.library.forEach(function (item, index) {
@@ -687,7 +803,7 @@
     });
 
     const actions = el('div', 'form-actions');
-    actions.append(button('Cancelar', 'secondary-button', renderAdminLinks));
+    actions.append(button('Cancelar', 'secondary-button', leaveLinkForm));
     const submit = el('button', 'primary-button', 'Guardar');
     submit.type = 'submit';
     actions.append(submit);
@@ -698,7 +814,7 @@
       submit.textContent = 'Guardando…';
       try {
         const selected = form.querySelector('input[name="visual"]:checked');
-        await api('admin.saveLink', {
+        const result = await api('admin.saveLink', {
           id: link ? link.id : '',
           title: titleInput.value,
           url: urlInput.value,
@@ -708,11 +824,9 @@
           visual: selected ? selected.value : '',
           description: description.value
         });
-        state.adminLinks = await api('admin.listLinks');
-        const fresh = await api('bootstrap');
-        state.links = fresh.links || [];
-        state.current = 0;
+        applySavedLink(result);
         state.mainNeedsRefresh = true;
+        state.adminFormOpen = false;
         renderAdminLinks();
         showToast('Enlace guardado.');
       } catch (error) {
@@ -722,6 +836,49 @@
       }
     });
     content.append(form);
+  }
+
+  function leaveLinkForm() {
+    state.adminFormOpen = false;
+    if (state.adminRefreshPending || !state.adminLinksLoaded || state.adminLinksRevision !== state.dataRevision) {
+      selectAdminTab('links');
+      return;
+    }
+    renderAdminLinks();
+  }
+
+  function sortLinks(links) {
+    return links.slice().sort(function (a, b) { return a.order - b.order || a.title.localeCompare(b.title, 'es'); });
+  }
+
+  function updatePublicLinksFromAdmin() {
+    const currentId = state.links[state.current] ? state.links[state.current].id : '';
+    state.links = sortLinks(state.adminLinks.filter(function (item) { return item.active; }));
+    const preservedIndex = currentId ? state.links.findIndex(function (item) { return item.id === currentId; }) : -1;
+    state.current = preservedIndex >= 0 ? preservedIndex : 0;
+  }
+
+  function applyKnownRevision(revision, changedArea) {
+    const value = String(revision || state.dataRevision || '');
+    state.dataRevision = value;
+    if (changedArea === 'links') {
+      state.adminLinksRevision = value;
+      if (state.adminUsersLoaded) state.adminUsersRevision = value;
+    } else if (changedArea === 'users') {
+      state.adminUsersRevision = value;
+      if (state.adminLinksLoaded) state.adminLinksRevision = value;
+    }
+  }
+
+  function applySavedLink(result) {
+    if (!result || !result.link || !result.link.id) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el enlace guardado.');
+    const index = state.adminLinks.findIndex(function (item) { return item.id === result.link.id; });
+    if (index >= 0) state.adminLinks[index] = result.link;
+    else state.adminLinks.push(result.link);
+    state.adminLinks = sortLinks(state.adminLinks);
+    state.adminLinksLoaded = true;
+    applyKnownRevision(result.dataRevision, 'links');
+    updatePublicLinksFromAdmin();
   }
 
   function field(parent, label, type, name, value, required) {
@@ -749,10 +906,8 @@
 
   async function toggleLink(link) {
     try {
-      await api('admin.saveLink', Object.assign({}, link, { active: !link.active }));
-      state.adminLinks = await api('admin.listLinks');
-      const fresh = await api('bootstrap');
-      state.links = fresh.links || [];
+      const result = await api('admin.saveLink', Object.assign({}, link, { active: !link.active }));
+      applySavedLink(result);
       state.mainNeedsRefresh = true;
       renderAdminLinks();
       showToast(link.active ? 'Enlace desactivado.' : 'Enlace activado.');
@@ -764,10 +919,11 @@
   async function removeLink(link) {
     if (!window.confirm('¿Eliminar “' + link.title + '”? Esta acción quita la fila de ENLACES.')) return;
     try {
-      await api('admin.deleteLink', { id: link.id });
-      state.adminLinks = await api('admin.listLinks');
-      const fresh = await api('bootstrap');
-      state.links = fresh.links || [];
+      const result = await api('admin.deleteLink', { id: link.id });
+      if (!result || result.id !== link.id) throw apiError_('SERVER_ERROR', 'El servidor no ha confirmado el enlace eliminado.');
+      state.adminLinks = state.adminLinks.filter(function (item) { return item.id !== result.id; });
+      applyKnownRevision(result.dataRevision, 'links');
+      updatePublicLinksFromAdmin();
       state.mainNeedsRefresh = true;
       renderAdminLinks();
       showToast('Enlace eliminado.');
@@ -777,6 +933,7 @@
   }
 
   function renderAdminUsers() {
+    state.adminFormOpen = false;
     const content = document.getElementById('admin-content');
     clear(content);
     content.append(el('p', 'admin-note', 'El alta, la eliminación y el PIN inicial se gestionan en la hoja USUARIOS. Aquí puedes gestionar el acceso y el rol.'));
@@ -803,19 +960,26 @@
         active.input.disabled = true;
         admin.input.disabled = true;
         try {
-          await api('admin.updateUser', {
+          const result = await api('admin.updateUser', {
             email: user.email,
             active: active.input.checked,
             admin: admin.input.checked,
             confirmSelfLockout: confirmed
           });
-          user.active = active.input.checked;
-          user.admin = admin.input.checked;
+          if (!result || !result.user || result.user.email !== user.email) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el usuario actualizado.');
+          user.active = result.user.active;
+          user.admin = result.user.admin;
+          user.name = result.user.name;
+          applyKnownRevision(result.dataRevision, 'users');
           showToast('Permisos actualizados.');
-          if (user.email === state.user.email && (!user.active || !user.admin)) {
+          if (user.email === state.user.email && !user.active) {
             clearSession();
             closeAdmin();
             renderEntry();
+          } else if (user.email === state.user.email && !user.admin) {
+            state.user.admin = false;
+            state.mainNeedsRefresh = false;
+            renderApp();
           }
         } catch (error) {
           active.input.checked = user.active;
@@ -861,6 +1025,57 @@
   function humanError(error) {
     const message = error && error.message ? String(error.message) : 'Ha ocurrido un error inesperado.';
     return message.replace(/^Exception:\s*/i, '');
+  }
+
+  async function checkDataRevision(force) {
+    if (!state.sessionToken || state.dataCheckPending) return;
+    const now = Date.now();
+    if (now - state.lastDataCheck < DATA_CHECK_THROTTLE_MS) return;
+    if (!force && now - state.lastDataCheck < DATA_CHECK_MS) return;
+    state.lastDataCheck = now;
+    state.dataCheckPending = true;
+    try {
+      const result = await api('data.revision');
+      const revision = result && String(result.dataRevision || '');
+      if (revision && state.dataRevision && revision !== state.dataRevision) {
+        await refreshDataFromServer();
+      } else if (revision && !state.dataRevision) {
+        state.dataRevision = revision;
+      }
+    } catch (_) {
+      // La comprobación periódica no interrumpe el uso; los errores de sesión ya vuelven al acceso.
+    } finally {
+      state.dataCheckPending = false;
+    }
+  }
+
+  async function refreshDataFromServer() {
+    const adminDialog = document.getElementById('admin-dialog');
+    const adminWasOpen = Boolean(adminDialog && adminDialog.open);
+    const formWasOpen = adminWasOpen && state.adminFormOpen;
+    const data = await api('bootstrap');
+    if (!data || !data.user || !data.user.email || !Array.isArray(data.links)) {
+      throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto los datos actualizados esperados.');
+    }
+    applyBootstrapData(data, true);
+    state.adminLinksLoaded = false;
+    state.adminUsersLoaded = false;
+    state.adminLinksRevision = '';
+    state.adminUsersRevision = '';
+    if (!adminWasOpen) {
+      renderApp();
+      return;
+    }
+    if (!state.user.admin) {
+      renderApp();
+      return;
+    }
+    state.mainNeedsRefresh = true;
+    if (formWasOpen) {
+      state.adminRefreshPending = true;
+      return;
+    }
+    await selectAdminTab(state.adminActiveTab);
   }
 
   async function fetchVersionMeta() {
@@ -1056,11 +1271,18 @@
     if (state.sessionToken) bootstrap(false, true);
   }
 
-  window.addEventListener('focus', function () { checkRemoteVersion(true); });
+  window.addEventListener('focus', function () {
+    checkRemoteVersion(true);
+    checkDataRevision(true);
+  });
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') checkRemoteVersion(true);
+    if (document.visibilityState === 'visible') {
+      checkRemoteVersion(true);
+      checkDataRevision(true);
+    }
   });
   setInterval(function () { checkRemoteVersion(false); }, VERSION_CHECK_MS);
+  setInterval(function () { checkDataRevision(false); }, DATA_CHECK_MS);
 
   initializeApp();
 })();

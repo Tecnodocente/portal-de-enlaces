@@ -9,6 +9,12 @@
     return Math.abs(Number(distance) || 0) > (Number(threshold) || 45);
   }
 
+  function isHorizontalDrag(deltaX, deltaY, threshold) {
+    const horizontal = Math.abs(Number(deltaX) || 0);
+    const vertical = Math.abs(Number(deltaY) || 0);
+    return horizontal >= (Number(threshold) || 14) && horizontal > vertical;
+  }
+
   function shouldSuppressClick(suppressUntil, now) {
     return Number(suppressUntil) > Number(now);
   }
@@ -53,6 +59,7 @@
 
   return Object.freeze({
     isNavigationSwipe: isNavigationSwipe,
+    isHorizontalDrag: isHorizontalDrag,
     shouldSuppressClick: shouldSuppressClick,
     compareSemanticVersions: compareSemanticVersions,
     versionUpdateDecision: versionUpdateDecision,
