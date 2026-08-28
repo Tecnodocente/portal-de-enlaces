@@ -124,6 +124,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .empty-state h3 { margin: 18px 0 8px; font-family: Georgia, serif; font-size: 2rem; font-weight: 500; }
 .empty-state p { margin: 0 auto 24px; color: var(--ink-soft); line-height: 1.6; }
 .app-footer { width: min(100%, 1440px); margin: 0 auto; padding: 16px clamp(20px, 5vw, 72px) max(18px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; gap: 20px; color: #697286; font-size: .76rem; }
+.footer-account { display: inline-flex; align-items: center; gap: 7px; }
+.pin-settings-button { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,253,247,.72); color: #596478; cursor: pointer; font-size: 1rem; line-height: 1; }
+.pin-settings-button:hover { background: white; color: var(--ink); transform: translateY(-1px); }
 
 .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); z-index: 100; max-width: min(90vw, 520px); padding: 13px 18px; border-radius: 14px; background: var(--ink); color: white; box-shadow: var(--shadow); opacity: 0; transform: translate(-50%, 18px); pointer-events: none; transition: .24s ease; }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
@@ -131,6 +134,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 
 .admin-dialog { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; background: var(--paper); color: var(--ink); }
 .admin-dialog::backdrop { background: rgba(8,16,30,.68); }
+.pin-dialog { width: min(calc(100% - 32px), 470px); padding: 0; border: 0; border-radius: 24px; background: var(--paper-light); color: var(--ink); box-shadow: var(--shadow); }
+.pin-dialog::backdrop { background: rgba(8,16,30,.58); }
+.pin-dialog__card { display: grid; gap: 16px; padding: clamp(24px, 6vw, 38px); }
+.pin-dialog__title { margin: -4px 0 8px; font-family: Georgia, serif; font-size: 2rem; font-weight: 500; }
+.pin-dialog__feedback { min-height: 1.35em; margin: 0; color: #9a3828; font-size: .86rem; font-weight: 700; }
 .admin-frame { min-height: 100%; display: flex; flex-direction: column; }
 .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: max(22px, env(safe-area-inset-top)) clamp(20px, 6vw, 84px) 14px; border-bottom: 1px solid var(--line); background: rgba(255,253,247,.72); }
 .admin-title { margin: 2px 0 0; font-family: Georgia, serif; font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 500; }
@@ -178,8 +186,6 @@ textarea.field__input { resize: vertical; }
 .user-row { grid-template-columns: minmax(180px, 1fr) auto; padding: 20px; }
 .user-row__identity { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
 .user-row__toggles { display: flex; flex-wrap: wrap; gap: 18px; }
-.pin-status { align-self: center; color: #687185; font-size: .82rem; font-weight: 700; }
-.pin-button { min-height: 40px; padding: 0 14px; }
 .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: .82rem; font-weight: 700; }
 .switch input { position: absolute; opacity: 0; }
 .switch__control { position: relative; width: 42px; height: 24px; border-radius: 999px; background: #c9c7c2; transition: .18s ease; }

@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.0.0';
+  const LOADED_APP_VERSION = '2.1.0';
   let REMOTE_VERSION = LOADED_APP_VERSION;
   const VERSION_CHECK_MS = 3 * 60 * 1000;
   const VERSION_RETRY_MS = 15 * 1000;
@@ -166,6 +166,9 @@
             email: email.value,
             pin: pin.value
           }, '');
+          if (!result || !/^[a-f0-9]{64}$/i.test(String(result.token || ''))) {
+            throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto una sesión válida.');
+          }
           pin.value = '';
           state.sessionToken = result.token;
           saveLocalToken(result.token);
@@ -210,6 +213,9 @@
     if (!silent) renderLoading();
     try {
       const data = await api('bootstrap');
+      if (!data || !data.user || !data.user.email) {
+        throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto los datos de sesión esperados.');
+      }
       state.user = data.user;
       state.links = Array.isArray(data.links) ? data.links : [];
       state.current = 0;
@@ -256,8 +262,14 @@
     }
 
     const footer = el('footer', 'app-footer');
-    footer.append(el('span', '', 'Acceso interno del profesorado'), el('span', '', state.user.email));
-    root.append(header, main, footer, buildToast(), buildAdminDialog());
+    const account = el('span', 'footer-account');
+    account.append(el('span', '', state.user.email));
+    const pinSettings = button('⚙', 'pin-settings-button', openPinDialog);
+    pinSettings.setAttribute('aria-label', 'Cambiar PIN');
+    pinSettings.title = 'Cambiar PIN';
+    account.append(pinSettings);
+    footer.append(el('span', '', 'Acceso interno del profesorado'), account);
+    root.append(header, main, footer, buildToast(), buildAdminDialog(), buildPinDialog());
   }
 
   function buildCarousel() {
@@ -453,6 +465,89 @@
     return dialog;
   }
 
+  function buildPinDialog() {
+    const dialog = el('dialog', 'pin-dialog');
+    dialog.id = 'pin-dialog';
+    const form = el('form', 'pin-dialog__card');
+    form.method = 'dialog';
+    form.append(el('p', 'eyebrow', 'Cuenta personal'), el('h2', 'pin-dialog__title', 'Cambiar PIN'));
+    const currentPin = field(form, 'PIN actual', 'password', 'currentPin', '', true);
+    const newPin = field(form, 'PIN nuevo', 'password', 'newPin', '', true);
+    const confirmation = field(form, 'Repetir PIN nuevo', 'password', 'newPinConfirmation', '', true);
+    [currentPin, newPin, confirmation].forEach(function (input) {
+      input.inputMode = 'numeric';
+      input.pattern = '[0-9]{4,8}';
+      input.minLength = 4;
+      input.maxLength = 8;
+    });
+    currentPin.autocomplete = 'current-password';
+    newPin.autocomplete = 'new-password';
+    confirmation.autocomplete = 'new-password';
+    const feedback = el('p', 'pin-dialog__feedback');
+    feedback.setAttribute('role', 'alert');
+    const actions = el('div', 'form-actions');
+    actions.append(button('Cancelar', 'secondary-button', closePinDialog));
+    const submit = el('button', 'primary-button', 'Guardar PIN');
+    submit.type = 'submit';
+    actions.append(submit);
+    form.append(feedback, actions);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      feedback.textContent = '';
+      if (!/^\d{4,8}$/.test(currentPin.value) || !/^\d{4,8}$/.test(newPin.value) || !/^\d{4,8}$/.test(confirmation.value)) {
+        feedback.textContent = 'Los tres PIN deben contener entre 4 y 8 dígitos.';
+        return;
+      }
+      if (newPin.value !== confirmation.value) {
+        feedback.textContent = 'El PIN nuevo y su confirmación no coinciden.';
+        return;
+      }
+      submit.disabled = true;
+      submit.textContent = 'Guardando…';
+      try {
+        const result = await api('changeOwnPin', {
+          currentPin: currentPin.value,
+          newPin: newPin.value,
+          newPinConfirmation: confirmation.value
+        });
+        if (!result || result.changed !== true) throw apiError_('SERVER_ERROR', 'El servidor no ha confirmado el cambio de PIN.');
+        form.reset();
+        closePinDialog();
+        showToast('PIN actualizado correctamente.');
+      } catch (error) {
+        currentPin.value = '';
+        newPin.value = '';
+        confirmation.value = '';
+        feedback.textContent = humanError(error);
+        currentPin.focus();
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Guardar PIN';
+      }
+    });
+    dialog.append(form);
+    dialog.addEventListener('cancel', function (event) { event.preventDefault(); closePinDialog(); });
+    return dialog;
+  }
+
+  function openPinDialog() {
+    const dialog = document.getElementById('pin-dialog');
+    if (!dialog) return;
+    dialog.showModal();
+    const currentPin = dialog.querySelector('input[name="currentPin"]');
+    if (currentPin) currentPin.focus();
+  }
+
+  function closePinDialog() {
+    const dialog = document.getElementById('pin-dialog');
+    if (!dialog) return;
+    const form = dialog.querySelector('form');
+    if (form) form.reset();
+    const feedback = dialog.querySelector('.pin-dialog__feedback');
+    if (feedback) feedback.textContent = '';
+    if (dialog.open) dialog.close();
+  }
+
   async function openAdmin() {
     const dialog = document.getElementById('admin-dialog');
     if (!dialog) return;
@@ -483,7 +578,9 @@
         state.adminLinks = Array.isArray(results[0]) ? results[0] : [];
         renderAdminLinks();
       } else {
-        state.adminUsers = await api('admin.listUsers');
+        const users = await api('admin.listUsers');
+        if (!Array.isArray(users)) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el listado de usuarios esperado.');
+        state.adminUsers = users;
         renderAdminUsers();
       }
     } catch (error) {
@@ -682,7 +779,7 @@
   function renderAdminUsers() {
     const content = document.getElementById('admin-content');
     clear(content);
-    content.append(el('p', 'admin-note', 'El alta y la eliminación de profesores se realiza en la hoja USUARIOS. Aquí puedes gestionar su acceso y su rol.'));
+    content.append(el('p', 'admin-note', 'El alta, la eliminación y el PIN inicial se gestionan en la hoja USUARIOS. Aquí puedes gestionar el acceso y el rol.'));
     const list = el('div', 'users-list');
     state.adminUsers.forEach(function (user) {
       const row = el('article', 'user-row');
@@ -691,31 +788,7 @@
       const toggles = el('div', 'user-row__toggles');
       const active = checkbox('Activo', user.active);
       const admin = checkbox('Administrador', user.admin);
-      const pinStatus = el('span', 'pin-status', user.pinConfigured ? 'PIN configurado' : 'Sin PIN');
-      const resetPin = button(user.pinConfigured ? 'Restablecer PIN' : 'Establecer PIN', 'secondary-button pin-button', async function () {
-        const entered = window.prompt('Nuevo PIN para ' + user.email + ' (4 a 8 dígitos):');
-        if (entered == null) return;
-        let newPin = String(entered).trim();
-        if (!/^\d{4,8}$/.test(newPin)) {
-          showToast('El PIN debe tener entre 4 y 8 dígitos.', true);
-          return;
-        }
-        resetPin.disabled = true;
-        try {
-          await api('admin.setPin', { email: user.email, pin: newPin });
-          newPin = '';
-          user.pinConfigured = true;
-          pinStatus.textContent = 'PIN configurado';
-          resetPin.textContent = 'Restablecer PIN';
-          showToast('PIN actualizado.');
-        } catch (error) {
-          newPin = '';
-          showToast(humanError(error), true);
-        } finally {
-          resetPin.disabled = false;
-        }
-      });
-      toggles.append(active.label, admin.label, pinStatus, resetPin);
+      toggles.append(active.label, admin.label);
       async function saveUser() {
         const selfBlocking = user.email === state.user.email && (!active.input.checked || !admin.input.checked);
         let confirmed = false;
@@ -948,6 +1021,9 @@
   }
 
   async function initializeApp() {
+    state.sessionToken = readLocalToken();
+    if (state.sessionToken) renderLoading();
+    else renderEntry();
     let meta = null;
     try {
       meta = await fetchVersionMeta();
@@ -962,7 +1038,6 @@
     } catch (_) {
       // Si ya existe un SW, la interfaz todavía puede abrirse sin conexión.
     }
-    renderEntry();
     const decision = meta && core
       ? core.versionUpdateDecision(LOADED_APP_VERSION, REMOTE_VERSION, readUpdateAttempt(), Date.now(), UPDATE_COOLDOWN_MS)
       : (meta && REMOTE_VERSION !== LOADED_APP_VERSION ? 'update' : 'none');
@@ -978,7 +1053,6 @@
         );
       } catch (_) {}
     }
-    state.sessionToken = readLocalToken();
     if (state.sessionToken) bootstrap(false, true);
   }
 
