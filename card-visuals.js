@@ -5,6 +5,32 @@
   'use strict';
 
   const NS = 'http://www.w3.org/2000/svg';
+  const CARD_PALETTE = Object.freeze([
+    Object.freeze({ accent: '#7896B8', tint: '#AFC0D2' }),
+    Object.freeze({ accent: '#8FA58B', tint: '#BDC9B9' }),
+    Object.freeze({ accent: '#C98268', tint: '#E0B09F' }),
+    Object.freeze({ accent: '#C58E9A', tint: '#DDB8C0' }),
+    Object.freeze({ accent: '#B9A06B', tint: '#D5C59F' }),
+    Object.freeze({ accent: '#9A91B4', tint: '#C1BBD0' }),
+    Object.freeze({ accent: '#6F9F9A', tint: '#A9C7C4' }),
+    Object.freeze({ accent: '#D3A07C', tint: '#E4C1A8' })
+  ]);
+
+  function stableHash(value) {
+    const text = String(value || 'portal-card');
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function paletteFor(link) {
+    const item = link || {};
+    const stableId = item.id || item.title || item.url || 'portal-card';
+    return CARD_PALETTE[stableHash(stableId) % CARD_PALETTE.length];
+  }
 
   function node(tag, className, text) {
     const item = document.createElement(tag);
@@ -49,10 +75,13 @@
     const link = options.link || {};
     const profile = options.profile || { key: 'general', label: 'Enlace del centro' };
     const variation = options.variation || {};
+    const palette = paletteFor(link);
     const spriteUrl = options.baseUrl + '/assets/cards/semantic-symbols.svg?v=' + encodeURIComponent(options.assetsVersion || '');
     const scenesUrl = options.baseUrl + '/assets/cards/semantic-scenes.svg?v=' + encodeURIComponent(options.assetsVersion || '');
 
     card.classList.add('link-card--type-' + profile.key, 'link-card--variant-' + (variation.variant || 0));
+    card.style.setProperty('--card-accent', palette.accent);
+    card.style.setProperty('--card-tint', palette.tint);
     card.style.setProperty('--image-position-x', (variation.x || 50) + '%');
     card.style.setProperty('--image-position-y', (variation.y || 50) + '%');
     card.style.setProperty('--image-scale', String(variation.scale || 1.04));
@@ -95,5 +124,5 @@
     card.append(media, semantic, body);
   }
 
-  return Object.freeze({ render: render, titleClass: titleClass });
+  return Object.freeze({ render: render, titleClass: titleClass, paletteFor: paletteFor });
 });
