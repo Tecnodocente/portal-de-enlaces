@@ -6,15 +6,20 @@
 
   const NS = 'http://www.w3.org/2000/svg';
   const CARD_PALETTE = Object.freeze([
-    Object.freeze({ accent: '#7896B8', tint: '#AFC0D2' }),
-    Object.freeze({ accent: '#8FA58B', tint: '#BDC9B9' }),
-    Object.freeze({ accent: '#C98268', tint: '#E0B09F' }),
-    Object.freeze({ accent: '#C58E9A', tint: '#DDB8C0' }),
-    Object.freeze({ accent: '#B9A06B', tint: '#D5C59F' }),
-    Object.freeze({ accent: '#9A91B4', tint: '#C1BBD0' }),
-    Object.freeze({ accent: '#6F9F9A', tint: '#A9C7C4' }),
-    Object.freeze({ accent: '#D3A07C', tint: '#E4C1A8' })
+    Object.freeze({ accent: '#8FA8C7', tint: '#8FA8C7' }),
+    Object.freeze({ accent: '#C7A2A2', tint: '#C7A2A2' }),
+    Object.freeze({ accent: '#7FB8B2', tint: '#7FB8B2' }),
+    Object.freeze({ accent: '#D2BE8A', tint: '#D2BE8A' }),
+    Object.freeze({ accent: '#A99FCF', tint: '#A99FCF' }),
+    Object.freeze({ accent: '#B8A27A', tint: '#B8A27A' }),
+    Object.freeze({ accent: '#9EB4C8', tint: '#9EB4C8' }),
+    Object.freeze({ accent: '#C98F7C', tint: '#C98F7C' }),
+    Object.freeze({ accent: '#A8BFA8', tint: '#A8BFA8' }),
+    Object.freeze({ accent: '#E2B38F', tint: '#E2B38F' }),
+    Object.freeze({ accent: '#9BB7A4', tint: '#9BB7A4' }),
+    Object.freeze({ accent: '#D6A3B8', tint: '#D6A3B8' })
   ]);
+  let renderedCardCount = 0;
 
   function stableHash(value) {
     const text = String(value || 'portal-card');
@@ -26,9 +31,13 @@
     return hash >>> 0;
   }
 
-  function paletteFor(link) {
+  function paletteFor(link, position) {
     const item = link || {};
     const stableId = item.id || item.title || item.url || 'portal-card';
+    const numericPosition = Number(position);
+    if (Number.isInteger(numericPosition) && numericPosition >= 0) {
+      return CARD_PALETTE[numericPosition % CARD_PALETTE.length];
+    }
     return CARD_PALETTE[stableHash(stableId) % CARD_PALETTE.length];
   }
 
@@ -37,18 +46,6 @@
     if (className) item.className = className;
     if (text != null) item.textContent = text;
     return item;
-  }
-
-  function icon(symbol, className, spriteUrl) {
-    const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('class', className);
-    svg.setAttribute('viewBox', '0 0 120 120');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('focusable', 'false');
-    const use = document.createElementNS(NS, 'use');
-    use.setAttribute('href', spriteUrl + '#' + symbol);
-    svg.append(use);
-    return svg;
   }
 
   function scene(symbol, className, spriteUrl) {
@@ -65,9 +62,9 @@
 
   function titleClass(value) {
     const length = String(value || '').trim().length;
-    if (length <= 24) return 'link-card__title--short';
-    if (length <= 48) return 'link-card__title--medium';
-    if (length <= 72) return 'link-card__title--long';
+    if (length <= 22) return 'link-card__title--short';
+    if (length <= 38) return 'link-card__title--medium';
+    if (length <= 64) return 'link-card__title--long';
     return 'link-card__title--very-long';
   }
 
@@ -75,8 +72,11 @@
     const link = options.link || {};
     const profile = options.profile || { key: 'general', label: 'Enlace del centro' };
     const variation = options.variation || {};
-    const palette = paletteFor(link);
-    const spriteUrl = options.baseUrl + '/assets/cards/semantic-symbols.svg?v=' + encodeURIComponent(options.assetsVersion || '');
+    const position = card.dataset.index === undefined || card.dataset.index === ''
+      ? renderedCardCount
+      : card.dataset.index;
+    renderedCardCount += 1;
+    const palette = paletteFor(link, position);
     const scenesUrl = options.baseUrl + '/assets/cards/semantic-scenes.svg?v=' + encodeURIComponent(options.assetsVersion || '');
 
     card.classList.add('link-card--type-' + profile.key, 'link-card--variant-' + (variation.variant || 0));
@@ -107,9 +107,6 @@
 
     const body = node('span', 'link-card__body');
     const identity = node('span', 'link-card__identity');
-    const iconBox = node('span', 'link-card__icon');
-    iconBox.setAttribute('aria-hidden', 'true');
-    iconBox.append(icon(profile.key, 'link-card__icon-mark', spriteUrl));
     const identityText = node('span', 'link-card__identity-text');
     identityText.append(node('span', 'link-card__category', link.category || profile.label || 'Enlace'));
     if (profile.service) {
@@ -118,7 +115,7 @@
         : profile.service;
       identityText.append(node('span', 'link-card__service', service));
     }
-    identity.append(iconBox, identityText);
+    identity.append(identityText);
     body.append(identity, node('span', 'link-card__title ' + titleClass(link.title), link.title));
     body.append(node('span', 'link-card__action', 'Abrir enlace ↗'));
     card.append(media, semantic, body);
