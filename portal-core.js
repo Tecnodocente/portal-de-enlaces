@@ -37,17 +37,27 @@
     return '';
   }
 
-  const SEMANTIC_FAMILIES = [
-    { file: 'formularios.webp', label: 'Formularios', keywords: ['formulario', 'encuesta', 'cuestionario', 'solicitud', 'inscripcion', 'google forms'] },
-    { file: 'incidencias.webp', label: 'Incidencias', keywords: ['incidencia', 'disciplina', 'parte disciplinario', 'registro de partes', 'sancion', 'averia', 'problema'] },
-    { file: 'comunidad.webp', label: 'Convivencia', keywords: ['convivencia', 'mediacion', 'familia', 'comunidad', 'claustro', 'coeducacion'] },
-    { file: 'organizacion.webp', label: 'Organización', keywords: ['organizacion', 'horario', 'calendario', 'agenda', 'reserva', 'gestion academica', 'seneca', 'secretaria', 'evaluacion'] },
-    { file: 'espacios.webp', label: 'Espacios y reservas', keywords: ['espacio', 'aula', 'reserva de aula', 'instalacion', 'laboratorio', 'biblioteca escolar'] },
-    { file: 'mantenimiento.webp', label: 'Mantenimiento', keywords: ['mantenimiento', 'reparacion', 'taller', 'material deteriorado', 'inventario tecnico'] },
-    { file: 'documentacion.webp', label: 'Documentación', keywords: ['documentacion', 'documento', 'instrucciones', 'normativa', 'protocolo', 'acta', 'archivo', 'google docs', 'google drive', 'google sheets'] },
-    { file: 'alumnado.webp', label: 'Alumnado', keywords: ['alumnado', 'estudiante', 'tutoria', 'orientacion', 'grupo', 'matricula'] },
-    { file: 'digital.webp', label: 'Aplicaciones y plataformas', keywords: ['moodle', 'plataforma', 'aplicacion', 'herramienta digital', 'tic', 'canva', 'servicio corporativo'] },
-    { file: 'recursos.webp', label: 'Recursos', keywords: ['recurso', 'docencia', 'aprendizaje', 'material', 'biblioteca'] }
+  const SEMANTIC_TYPES = [
+    { key: 'incidents', file: 'incidencias.webp', label: 'Incidencias', accent: 'terracotta', keywords: ['incidencia', 'disciplina', 'parte disciplinario', 'registro de partes', 'sancion', 'convivencia'] },
+    { key: 'schedule', file: 'organizacion.webp', label: 'Horarios', accent: 'gold', keywords: ['horario', 'cuadrante', 'turno', 'planificacion horaria'] },
+    { key: 'reservations', file: 'espacios.webp', label: 'Reservas', accent: 'teal', keywords: ['reserva', 'reservar', 'espacio', 'aula', 'laboratorio', 'instalacion'] },
+    { key: 'assessment', file: 'alumnado.webp', label: 'Evaluación', accent: 'sage', keywords: ['evaluacion', 'rubrica', 'calificacion', 'criterio', 'progreso', 'informe de evaluacion'] },
+    { key: 'tutoring', file: 'alumnado.webp', label: 'Tutoría', accent: 'violet', keywords: ['tutoria', 'orientacion', 'entrevista familia', 'seguimiento tutorial'] },
+    { key: 'students', file: 'alumnado.webp', label: 'Alumnado', accent: 'cobalt', keywords: ['alumnado', 'estudiante', 'grupo', 'matricula', 'ficha personal'] },
+    { key: 'maintenance', file: 'mantenimiento.webp', label: 'Mantenimiento', accent: 'terracotta', keywords: ['mantenimiento', 'reparacion', 'averia', 'taller', 'material deteriorado', 'inventario tecnico'] },
+    { key: 'meetings', file: 'comunidad.webp', label: 'Reuniones', accent: 'gold', keywords: ['reunion', 'claustro', 'consejo escolar', 'equipo educativo', 'acta de reunion'] },
+    { key: 'communications', file: 'comunidad.webp', label: 'Comunicaciones', accent: 'cobalt', keywords: ['comunicacion', 'mensaje', 'aviso', 'circular', 'notificacion', 'familias'] },
+    { key: 'calendar', file: 'organizacion.webp', label: 'Calendario', accent: 'gold', keywords: ['calendario de reuniones', 'calendario', 'agenda', 'efemeride', 'fecha', 'plazo'] },
+    { key: 'documents', file: 'documentacion.webp', label: 'Documentación', accent: 'cobalt', services: ['Google Drive', 'Google Docs', 'Google Sheets'], keywords: ['documentacion', 'documento', 'instrucciones', 'normativa', 'protocolo', 'acta', 'archivo', 'carpeta'] },
+    { key: 'forms', file: 'formularios.webp', label: 'Formularios', accent: 'terracotta', services: ['Google Forms'], keywords: ['formulario', 'inscripcion', 'solicitud generica'] },
+    { key: 'surveys', file: 'formularios.webp', label: 'Encuestas', accent: 'violet', keywords: ['encuesta', 'cuestionario', 'sondeo', 'valoracion', 'consulta'] },
+    { key: 'virtual-classroom', file: 'digital.webp', label: 'Aula virtual', accent: 'teal', services: ['Moodle'], keywords: ['aula virtual', 'moodle', 'curso virtual', 'plataforma educativa'] },
+    { key: 'academic-management', file: 'organizacion.webp', label: 'Gestión académica', accent: 'gold', services: ['Séneca'], keywords: ['gestion academica', 'secretaria', 'expediente', 'grabacion academica'] },
+    { key: 'technology', file: 'digital.webp', label: 'Tecnología', accent: 'teal', keywords: ['tic', 'tecnologia', 'informatica', 'aplicacion', 'herramienta digital', 'canva'] },
+    { key: 'administration', file: 'organizacion.webp', label: 'Administración', accent: 'terracotta', keywords: ['administracion', 'tramite', 'certificado', 'gestion interna', 'secretaria administrativa'] },
+    { key: 'organization', file: 'organizacion.webp', label: 'Organización', accent: 'gold', keywords: ['planificacion', 'coordinacion', 'programacion', 'proyecto'] },
+    { key: 'resources', file: 'recursos.webp', label: 'Recursos', accent: 'sage', services: ['Canva'], keywords: ['recurso', 'docencia', 'aprendizaje', 'material', 'biblioteca', 'contenido'] },
+    { key: 'general', file: 'recursos.webp', label: 'Enlace del centro', accent: 'cobalt', keywords: [] }
   ];
 
   function semanticProfile(link) {
@@ -59,24 +69,26 @@
       url: normalizeText(link && link.url),
       service: normalizeText(service)
     };
-    let best = SEMANTIC_FAMILIES[SEMANTIC_FAMILIES.length - 1];
+    let best = SEMANTIC_TYPES[SEMANTIC_TYPES.length - 1];
     let bestScore = 0;
-    SEMANTIC_FAMILIES.forEach(function (family) {
+    SEMANTIC_TYPES.forEach(function (family) {
       let score = 0;
+      if (family.services && family.services.indexOf(service) !== -1) score += 7;
       family.keywords.forEach(function (keyword) {
         const clean = normalizeText(keyword);
-        if (fields.category.indexOf(clean) !== -1) score += 8;
-        if (fields.title.indexOf(clean) !== -1) score += 6;
-        if (fields.description.indexOf(clean) !== -1) score += 3;
-        if (fields.service.indexOf(clean) !== -1) score += 10;
-        if (fields.url.indexOf(clean.replace(/\s+/g, '')) !== -1) score += 2;
+        if (fields.category === clean) score += 22;
+        else if (fields.category.indexOf(clean) !== -1) score += 16;
+        if (fields.title.indexOf(clean) !== -1) score += 11;
+        if (fields.description.indexOf(clean) !== -1) score += 4;
+        if (fields.service.indexOf(clean) !== -1) score += 5;
+        if (clean && fields.url.indexOf(clean.replace(/\s+/g, '')) !== -1) score += 1;
       });
       if (score > bestScore) {
         best = family;
         bestScore = score;
       }
     });
-    return { file: best.file, label: best.label, service: service };
+    return { key: best.key, file: best.file, label: best.label, service: service, accent: best.accent };
   }
 
   function stableHash(value) {
@@ -94,7 +106,12 @@
     return {
       x: 38 + hash % 25,
       y: 42 + Math.floor(hash / 29) % 18,
-      scale: 1.02 + (Math.floor(hash / 997) % 7) / 100
+      scale: 1.02 + (Math.floor(hash / 997) % 7) / 100,
+      variant: hash % 6,
+      motifX: -10 + Math.floor(hash / 17) % 21,
+      motifY: -8 + Math.floor(hash / 41) % 17,
+      motifScale: 0.94 + (Math.floor(hash / 109) % 13) / 100,
+      motifRotate: -5 + Math.floor(hash / 331) % 11
     };
   }
 

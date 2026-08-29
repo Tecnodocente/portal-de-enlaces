@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.3.0';
+  const LOADED_APP_VERSION = '2.4.0';
   const AUTO_VISUAL = 'AUTO';
   const READ_RETRY_DELAY_MS = 550;
   const RETRYABLE_READ_ACTIONS = Object.freeze({
@@ -36,6 +36,7 @@
   const config = window.PORTAL_CONFIG || {};
   const baseUrl = new URL('.', window.location.href).href.replace(/\/$/, '');
   const core = window.PortalCore;
+  const cardVisuals = window.PortalCardVisuals;
   const root = document.getElementById('portal-root');
   const state = {
     version: LOADED_APP_VERSION,
@@ -349,38 +350,19 @@
       const card = el('button', 'link-card');
       card.type = 'button';
       card.dataset.index = String(index);
-      card.classList.add('link-card--accent-' + cardAccent(link));
-      const variation = cardVariation(link);
-      card.style.setProperty('--image-position-x', variation.x + '%');
-      card.style.setProperty('--image-position-y', variation.y + '%');
-      card.style.setProperty('--image-scale', String(variation.scale));
-      card.setAttribute('aria-label', 'Abrir ' + link.title);
-      const media = el('span', 'link-card__media');
-      const image = el('img', 'link-card__image');
-      image.src = resolveLinkVisual(link);
-      image.alt = '';
-      image.loading = index < 3 ? 'eager' : 'lazy';
-      image.addEventListener('error', function () {
-        image.hidden = true;
-        card.classList.add('link-card--fallback');
-      });
-      const veil = el('span', 'link-card__veil');
-      media.append(image, veil);
-      const body = el('span', 'link-card__body');
-      const identity = el('span', 'link-card__identity');
-      const monogram = el('span', 'link-card__monogram', cardMonogram(link.title));
-      monogram.setAttribute('aria-hidden', 'true');
-      const identityText = el('span', 'link-card__identity-text');
       const profile = semanticProfile(link);
-      identityText.append(el('span', 'link-card__category', link.category || profile.label || 'Enlace'));
-      const service = profile.service || cardService(link);
-      if (service) identityText.append(el('span', 'link-card__service', service));
-      identity.append(monogram, identityText);
-      const title = el('span', 'link-card__title ' + titleLengthClass(link.title), link.title);
-      body.append(identity, title);
-      if (link.description) body.append(el('span', 'link-card__description', link.description));
-      body.append(el('span', 'link-card__action', 'Abrir enlace ↗'));
-      card.append(media, body);
+      card.classList.add('link-card--accent-' + cardAccent(link, profile));
+      const variation = cardVariation(link);
+      card.setAttribute('aria-label', 'Abrir ' + link.title);
+      cardVisuals.render(card, {
+        link: link,
+        profile: profile,
+        variation: variation,
+        baseUrl: baseUrl,
+        assetsVersion: state.assetsVersion,
+        visualUrl: resolveLinkVisual(link),
+        eager: index < 3
+      });
       card.addEventListener('click', function () {
         if (core && core.shouldSuppressClick(state.suppressClickUntil, Date.now())) return;
         if (state.current !== index) {
@@ -417,14 +399,6 @@
     return section;
   }
 
-  function titleLengthClass(value) {
-    const length = String(value || '').trim().length;
-    if (length <= 24) return 'link-card__title--short';
-    if (length <= 48) return 'link-card__title--medium';
-    if (length <= 72) return 'link-card__title--long';
-    return 'link-card__title--very-long';
-  }
-
   function stableHash(value) {
     const text = String(value || '');
     let hash = 2166136261;
@@ -435,7 +409,8 @@
     return hash >>> 0;
   }
 
-  function cardAccent(link) {
+  function cardAccent(link, profile) {
+    if (profile && CARD_ACCENTS.indexOf(profile.accent) !== -1) return profile.accent;
     return CARD_ACCENTS[stableHash((link.id || '') + '|' + (link.title || '')) % CARD_ACCENTS.length];
   }
 
@@ -443,12 +418,6 @@
     if (core && typeof core.cardVariation === 'function') return core.cardVariation(link.id || link.title);
     const hash = stableHash(link.id || link.title);
     return { x: 38 + hash % 25, y: 42 + Math.floor(hash / 29) % 18, scale: 1.02 + (Math.floor(hash / 997) % 7) / 100 };
-  }
-
-  function cardMonogram(title) {
-    const words = String(title || '').trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return '↗';
-    return (words[0].charAt(0) + (words.length > 1 ? words[1].charAt(0) : words[0].charAt(1))).toUpperCase();
   }
 
   function cardService(link) {
