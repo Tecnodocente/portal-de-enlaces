@@ -2,7 +2,15 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.2.0';
+  const LOADED_APP_VERSION = '2.3.0';
+  const AUTO_VISUAL = 'AUTO';
+  const READ_RETRY_DELAY_MS = 550;
+  const RETRYABLE_READ_ACTIONS = Object.freeze({
+    bootstrap: true,
+    'data.revision': true,
+    'admin.listLinks': true,
+    'admin.listUsers': true
+  });
   let REMOTE_VERSION = LOADED_APP_VERSION;
   const VERSION_CHECK_MS = 3 * 60 * 1000;
   const VERSION_RETRY_MS = 15 * 1000;
@@ -96,18 +104,46 @@
   }
 
   async function requestApi(action, payload, token) {
-    const response = await fetch(String(config.API_URL || ''), {
-      method: 'POST',
-      redirect: 'follow',
-      cache: 'no-store',
-      credentials: 'omit',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: action, token: token || '', payload: payload || {} })
-    });
-    if (!response.ok) throw apiError_('NETWORK', 'El servidor no ha respondido correctamente.');
-    const envelope = await response.json();
-    if (!envelope || !envelope.ok) {
-      const detail = envelope && envelope.error ? envelope.error : {};
+    const attempts = RETRYABLE_READ_ACTIONS[action] ? 2 : 1;
+    let lastError;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        return await requestApiOnce(action, payload, token);
+      } catch (error) {
+        lastError = error;
+        if (!error.transient || attempt + 1 >= attempts) throw error;
+        await delay(READ_RETRY_DELAY_MS);
+      }
+    }
+    throw lastError;
+  }
+
+  async function requestApiOnce(action, payload, token) {
+    let response;
+    try {
+      response = await fetch(String(config.API_URL || ''), {
+        method: 'POST',
+        redirect: 'follow',
+        cache: 'no-store',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, token: token || '', payload: payload || {} })
+      });
+    } catch (_) {
+      throw apiError_('NETWORK', 'No se ha podido conectar con el servidor. Comprueba la conexión e inténtalo de nuevo.', true);
+    }
+    if (!response.ok) throw apiError_('NETWORK', 'El servidor no ha respondido correctamente. Inténtalo de nuevo.', true);
+    let envelope;
+    try {
+      envelope = JSON.parse(await response.text());
+    } catch (_) {
+      throw apiError_('INVALID_RESPONSE', 'El servidor ha devuelto una respuesta temporalmente inválida. Inténtalo de nuevo.', true);
+    }
+    if (!envelope || typeof envelope.ok !== 'boolean') {
+      throw apiError_('INVALID_RESPONSE', 'El servidor no ha devuelto una respuesta reconocible. Inténtalo de nuevo.', true);
+    }
+    if (!envelope.ok) {
+      const detail = envelope.error || {};
       if (detail.code === 'SESSION_EXPIRED' || detail.code === 'SESSION_INVALID') {
         clearSession();
         renderEntry();
@@ -122,10 +158,15 @@
     return requestApi(action, payload, state.sessionToken);
   }
 
-  function apiError_(code, message) {
+  function apiError_(code, message, transient) {
     const error = new Error(message);
     error.code = code;
+    error.transient = Boolean(transient);
     return error;
+  }
+
+  function delay(milliseconds) {
+    return new Promise(function (resolve) { setTimeout(resolve, milliseconds); });
   }
 
   function configurationReady() {
@@ -294,7 +335,7 @@
     pinSettings.title = 'Cambiar PIN';
     account.append(pinSettings);
     footer.append(el('span', '', 'Acceso interno del profesorado'), account);
-    root.append(header, main, footer, buildToast(), buildAdminDialog(), buildPinDialog());
+    root.append(header, main, footer, buildToast(), buildAdminDialog(), buildPinDialog(), buildCreateUserDialog(), buildDeleteUserDialog());
   }
 
   function buildCarousel() {
@@ -309,10 +350,14 @@
       card.type = 'button';
       card.dataset.index = String(index);
       card.classList.add('link-card--accent-' + cardAccent(link));
+      const variation = cardVariation(link);
+      card.style.setProperty('--image-position-x', variation.x + '%');
+      card.style.setProperty('--image-position-y', variation.y + '%');
+      card.style.setProperty('--image-scale', String(variation.scale));
       card.setAttribute('aria-label', 'Abrir ' + link.title);
       const media = el('span', 'link-card__media');
       const image = el('img', 'link-card__image');
-      image.src = resolveVisual(link.visual);
+      image.src = resolveLinkVisual(link);
       image.alt = '';
       image.loading = index < 3 ? 'eager' : 'lazy';
       image.addEventListener('error', function () {
@@ -326,8 +371,9 @@
       const monogram = el('span', 'link-card__monogram', cardMonogram(link.title));
       monogram.setAttribute('aria-hidden', 'true');
       const identityText = el('span', 'link-card__identity-text');
-      identityText.append(el('span', 'link-card__category', link.category || 'Enlace'));
-      const service = cardService(link);
+      const profile = semanticProfile(link);
+      identityText.append(el('span', 'link-card__category', link.category || profile.label || 'Enlace'));
+      const service = profile.service || cardService(link);
       if (service) identityText.append(el('span', 'link-card__service', service));
       identity.append(monogram, identityText);
       const title = el('span', 'link-card__title ' + titleLengthClass(link.title), link.title);
@@ -393,6 +439,12 @@
     return CARD_ACCENTS[stableHash((link.id || '') + '|' + (link.title || '')) % CARD_ACCENTS.length];
   }
 
+  function cardVariation(link) {
+    if (core && typeof core.cardVariation === 'function') return core.cardVariation(link.id || link.title);
+    const hash = stableHash(link.id || link.title);
+    return { x: 38 + hash % 25, y: 42 + Math.floor(hash / 29) % 18, scale: 1.02 + (Math.floor(hash / 997) % 7) / 100 };
+  }
+
   function cardMonogram(title) {
     const words = String(title || '').trim().split(/\s+/).filter(Boolean);
     if (!words.length) return '↗';
@@ -400,14 +452,20 @@
   }
 
   function cardService(link) {
+    if (core && typeof core.recognizedService === 'function') return core.recognizedService(link);
     let host = '';
     try { host = new URL(String(link.url || '')).hostname.toLowerCase(); } catch (_) {}
-    if (host === 'docs.google.com' && /\/forms\//i.test(String(link.url || ''))) return 'Google Forms';
+    if (host === 'forms.gle' || host === 'docs.google.com' && /\/forms\//i.test(String(link.url || ''))) return 'Google Forms';
     if (host === 'drive.google.com' || host === 'docs.google.com') return 'Google';
     if (host.indexOf('seneca') !== -1) return 'Séneca';
     if (host.indexOf('moodle') !== -1) return 'Moodle';
     if (host.indexOf('canva.com') !== -1) return 'Canva';
     return '';
+  }
+
+  function semanticProfile(link) {
+    if (core && typeof core.semanticProfile === 'function') return core.semanticProfile(link);
+    return { file: suggestVisual(link && link.category), label: link && link.category || 'Recursos', service: cardService(link) };
   }
 
   function updateCarousel() {
@@ -498,6 +556,11 @@
     }
     return baseUrl + '/' + (safe.indexOf('assets/') === 0 ? safe : 'assets/cards/' + safe) +
       '?v=' + encodeURIComponent(state.assetsVersion);
+  }
+
+  function resolveLinkVisual(link) {
+    const visual = String(link && link.visual || '').trim();
+    return resolveVisual(!visual || visual.toUpperCase() === AUTO_VISUAL ? semanticProfile(link).file : visual);
   }
 
   function openExternal(url) {
@@ -629,6 +692,147 @@
     return dialog;
   }
 
+  function buildCreateUserDialog() {
+    const dialog = el('dialog', 'user-dialog');
+    dialog.id = 'create-user-dialog';
+    const form = el('form', 'user-dialog__card');
+    form.append(el('p', 'eyebrow', 'Administración de usuarios'), el('h2', 'user-dialog__title', 'Dar de alta usuario'));
+    const name = field(form, 'NOMBRE', 'text', 'name', '', true);
+    const email = field(form, 'CORREO', 'email', 'email', '', true);
+    email.placeholder = 'nombre@g.educaand.es';
+    const choices = el('div', 'user-dialog__choices');
+    const active = checkbox('ACTIVO', true);
+    const admin = checkbox('ADMIN', false);
+    choices.append(active.label, admin.label);
+    const note = el('p', 'user-dialog__note', 'El PIN inicial será 1234. Después, el profesor podrá cambiarlo desde su aplicación.');
+    const feedback = el('p', 'user-dialog__feedback');
+    feedback.setAttribute('role', 'alert');
+    const actions = el('div', 'form-actions');
+    actions.append(button('Cancelar', 'secondary-button', closeCreateUserDialog));
+    const submit = el('button', 'primary-button', 'Dar de alta usuario');
+    submit.type = 'submit';
+    actions.append(submit);
+    form.append(choices, note, feedback, actions);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      submit.disabled = true;
+      submit.textContent = 'Guardando…';
+      feedback.textContent = '';
+      try {
+        const result = await api('admin.createUser', {
+          name: name.value,
+          email: email.value,
+          active: active.input.checked,
+          admin: admin.input.checked
+        });
+        if (!result || !result.user || !result.user.email) throw apiError_('SERVER_ERROR', 'El servidor no ha devuelto el usuario creado.');
+        state.adminUsers.push(result.user);
+        state.adminUsers = sortUsers(state.adminUsers);
+        state.adminUsersLoaded = true;
+        applyKnownRevision(result.dataRevision, 'users');
+        closeCreateUserDialog();
+        renderAdminUsers();
+        showToast('Usuario dado de alta. PIN inicial: 1234.');
+      } catch (error) {
+        feedback.textContent = humanError(error);
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Dar de alta usuario';
+      }
+    });
+    dialog.append(form);
+    dialog.addEventListener('cancel', function (event) { event.preventDefault(); closeCreateUserDialog(); });
+    return dialog;
+  }
+
+  function buildDeleteUserDialog() {
+    const dialog = el('dialog', 'user-dialog');
+    dialog.id = 'delete-user-dialog';
+    const card = el('div', 'user-dialog__card');
+    card.append(el('p', 'eyebrow', 'Acción irreversible en la hoja'), el('h2', 'user-dialog__title', 'Eliminar profesor'));
+    const identity = el('div', 'delete-user__identity');
+    const name = el('strong');
+    name.dataset.role = 'delete-user-name';
+    const email = el('span');
+    email.dataset.role = 'delete-user-email';
+    identity.append(name, email);
+    card.append(identity, el('p', 'user-dialog__warning', 'El registro correspondiente será eliminado de la hoja USUARIOS.'));
+    const feedback = el('p', 'user-dialog__feedback');
+    feedback.setAttribute('role', 'alert');
+    const actions = el('div', 'form-actions');
+    actions.append(button('Cancelar', 'secondary-button', closeDeleteUserDialog));
+    const remove = button('Eliminar profesor', 'danger-button', confirmDeleteUser);
+    actions.append(remove);
+    card.append(feedback, actions);
+    dialog.append(card);
+    dialog.addEventListener('cancel', function (event) { event.preventDefault(); closeDeleteUserDialog(); });
+    return dialog;
+  }
+
+  function openCreateUserDialog() {
+    const dialog = document.getElementById('create-user-dialog');
+    if (!dialog) return;
+    const form = dialog.querySelector('form');
+    if (form) form.reset();
+    const feedback = dialog.querySelector('.user-dialog__feedback');
+    if (feedback) feedback.textContent = '';
+    dialog.showModal();
+    const name = dialog.querySelector('input[name="name"]');
+    if (name) name.focus();
+  }
+
+  function closeCreateUserDialog() {
+    const dialog = document.getElementById('create-user-dialog');
+    if (dialog && dialog.open) dialog.close();
+  }
+
+  function openDeleteUserDialog(user) {
+    const dialog = document.getElementById('delete-user-dialog');
+    if (!dialog) return;
+    dialog._targetUser = user;
+    dialog.querySelector('[data-role="delete-user-name"]').textContent = user.name || 'Sin nombre';
+    dialog.querySelector('[data-role="delete-user-email"]').textContent = user.email;
+    dialog.querySelector('.user-dialog__feedback').textContent = '';
+    dialog.showModal();
+  }
+
+  function closeDeleteUserDialog() {
+    const dialog = document.getElementById('delete-user-dialog');
+    if (!dialog) return;
+    dialog._targetUser = null;
+    if (dialog.open) dialog.close();
+  }
+
+  async function confirmDeleteUser() {
+    const dialog = document.getElementById('delete-user-dialog');
+    const user = dialog && dialog._targetUser;
+    if (!dialog || !user) return;
+    const remove = dialog.querySelector('.danger-button');
+    const feedback = dialog.querySelector('.user-dialog__feedback');
+    remove.disabled = true;
+    feedback.textContent = '';
+    try {
+      const result = await api('admin.deleteUser', { email: user.email });
+      if (!result || !result.user || result.user.email !== user.email) throw apiError_('SERVER_ERROR', 'El servidor no ha confirmado el usuario eliminado.');
+      state.adminUsers = state.adminUsers.filter(function (item) { return item.email !== user.email; });
+      applyKnownRevision(result.dataRevision, 'users');
+      closeDeleteUserDialog();
+      if (result.selfDeleted) {
+        clearSession();
+        state.mainNeedsRefresh = false;
+        closeAdmin();
+        renderEntry('Tu usuario ha sido eliminado.');
+        return;
+      }
+      renderAdminUsers();
+      showToast('Profesor eliminado.');
+    } catch (error) {
+      feedback.textContent = humanError(error);
+    } finally {
+      remove.disabled = false;
+    }
+  }
+
   function openPinDialog() {
     const dialog = document.getElementById('pin-dialog');
     if (!dialog) return;
@@ -732,7 +936,7 @@
     state.adminLinks.forEach(function (link) {
       const row = el('article', 'admin-row');
       const thumb = el('img', 'admin-row__thumb');
-      thumb.src = resolveVisual(link.visual);
+      thumb.src = resolveLinkVisual(link);
       thumb.alt = '';
       thumb.addEventListener('error', function () { thumb.src = resolveVisual('recursos.webp'); });
       const info = el('div', 'admin-row__info');
@@ -781,26 +985,46 @@
 
     const visualTitle = el('p', 'field__label visual-heading', 'Fotografía de fondo');
     const visuals = el('div', 'visual-picker');
-    const currentVisual = link ? link.visual : suggestVisual(categoryInput.value);
+    const currentVisual = link && link.visual ? link.visual : AUTO_VISUAL;
+    const autoOption = el('label', 'visual-option visual-option--auto');
+    const autoRadio = el('input');
+    autoRadio.type = 'radio';
+    autoRadio.name = 'visual';
+    autoRadio.value = AUTO_VISUAL;
+    autoRadio.checked = String(currentVisual).toUpperCase() === AUTO_VISUAL;
+    const autoImage = el('img');
+    autoImage.alt = '';
+    const autoLabel = el('span', '', 'Automático');
+    autoOption.append(autoRadio, autoImage, autoLabel);
+    visuals.append(autoOption);
     state.library.forEach(function (item, index) {
       const option = el('label', 'visual-option');
       const radio = el('input');
       radio.type = 'radio';
       radio.name = 'visual';
       radio.value = item.file;
-      radio.checked = currentVisual ? currentVisual === item.file : index === 0;
+      radio.checked = currentVisual === item.file;
       const image = el('img');
       image.src = resolveVisual(item.file);
       image.alt = '';
       option.append(radio, image, el('span', '', item.label));
       visuals.append(option);
     });
-    categoryInput.addEventListener('change', function () {
-      if (link) return;
-      const suggestion = suggestVisual(categoryInput.value);
-      const radio = visuals.querySelector('input[value="' + cssEscape(suggestion) + '"]');
-      if (radio) radio.checked = true;
+    function updateAutomaticPreview() {
+      const profile = semanticProfile({
+        id: link ? link.id : '',
+        title: titleInput.value,
+        url: urlInput.value,
+        category: categoryInput.value,
+        description: description.value
+      });
+      autoImage.src = resolveVisual(profile.file);
+      autoLabel.textContent = 'Automático · ' + profile.label;
+    }
+    [titleInput, urlInput, categoryInput, description].forEach(function (input) {
+      input.addEventListener('input', updateAutomaticPreview);
     });
+    updateAutomaticPreview();
 
     const actions = el('div', 'form-actions');
     actions.append(button('Cancelar', 'secondary-button', leaveLinkForm));
@@ -849,6 +1073,12 @@
 
   function sortLinks(links) {
     return links.slice().sort(function (a, b) { return a.order - b.order || a.title.localeCompare(b.title, 'es'); });
+  }
+
+  function sortUsers(users) {
+    return core && typeof core.sortUsers === 'function'
+      ? core.sortUsers(users)
+      : users.slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'es'); });
   }
 
   function updatePublicLinksFromAdmin() {
@@ -936,7 +1166,12 @@
     state.adminFormOpen = false;
     const content = document.getElementById('admin-content');
     clear(content);
-    content.append(el('p', 'admin-note', 'El alta, la eliminación y el PIN inicial se gestionan en la hoja USUARIOS. Aquí puedes gestionar el acceso y el rol.'));
+    const toolbar = el('div', 'admin-toolbar');
+    toolbar.append(
+      el('p', 'admin-summary', state.adminUsers.length + (state.adminUsers.length === 1 ? ' usuario' : ' usuarios')),
+      button('+ Dar de alta usuario', 'primary-button primary-button--small', openCreateUserDialog)
+    );
+    content.append(toolbar, el('p', 'admin-note', 'Gestiona aquí el alta, la baja, el acceso y el rol. El PIN no se muestra ni se modifica desde Administración.'));
     const list = el('div', 'users-list');
     state.adminUsers.forEach(function (user) {
       const row = el('article', 'user-row');
@@ -992,7 +1227,11 @@
       }
       active.input.addEventListener('change', saveUser);
       admin.input.addEventListener('change', saveUser);
-      row.append(identity, toggles);
+      const remove = button('Eliminar', 'user-row__delete', function () { openDeleteUserDialog(user); });
+      remove.textContent = '🗑';
+      remove.title = 'Eliminar profesor';
+      remove.setAttribute('aria-label', 'Eliminar profesor');
+      row.append(identity, toggles, remove);
       list.append(row);
     });
     content.append(list);
@@ -1003,6 +1242,7 @@
     const input = el('input');
     input.type = 'checkbox';
     input.checked = checked;
+    input.defaultChecked = checked;
     const control = el('span', 'switch__control');
     control.setAttribute('aria-hidden', 'true');
     label.append(input, control, el('span', '', labelText));
