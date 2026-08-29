@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="scene-incidents" viewBox="0 0 360 300">
+    <path fill="#d9c5a5" opacity=".72" d="M75 38l224 18-17 212-224-18z"/>
+    <path fill="#f3e4c9" opacity=".9" d="M92 25l215 29-25 201-215-27z"/>
+    <path fill="#a96a4f" opacity=".78" d="M56 68l61-43h108l23 31h69v201H56z"/>
+    <path fill="#172b49" d="M45 82l68-48h99l22 31h72v202H45z"/>
+    <path fill="#213a5d" d="M61 91h226v158H61z"/>
+    <path fill="#f2dfbd" d="M96 76l141 14 34 36-15 108-176-17z"/>
+    <path fill="#cfb58e" d="M237 90l34 36-39-4z"/>
+    <circle cx="130" cy="125" r="20" fill="none" stroke="#17304f" stroke-width="5"/>
+    <path fill="none" stroke="#17304f" stroke-width="5" stroke-linecap="round" d="M112 155c9-15 28-17 40-4M167 123h60M164 142h72M99 178h128M95 195h91"/>
+    <path fill="#d66345" d="M219 154l36 65h-72z"/>
+    <path fill="#f3e4c9" d="M216 173h7l-2 25h-4zm1 31h5v6h-5z"/>
+  </symbol>
+  <symbol id="scene-schedule" viewBox="0 0 360 300">
+    <path fill="#112743" opacity=".9" d="M46 44h246v220H46z"/>
+    <path fill="#f1dfbd" d="M68 31h221v205H68z"/>
+    <path fill="#d7be97" d="M68 31h221v33H68z"/>
+    <g fill="#182e4b"><rect x="86" y="19" width="7" height="32" rx="3"/><rect x="116" y="19" width="7" height="32" rx="3"/><rect x="146" y="19" width="7" height="32" rx="3"/><rect x="176" y="19" width="7" height="32" rx="3"/><rect x="206" y="19" width="7" height="32" rx="3"/><rect x="236" y="19" width="7" height="32" rx="3"/><rect x="266" y="19" width="7" height="32" rx="3"/></g>
+    <g stroke="#8b806e" stroke-width="2" opacity=".7"><path d="M88 87h181M88 116h181M88 145h181M88 174h181M88 203h181M124 72v146M160 72v146M196 72v146M232 72v146"/></g>
+    <g fill="#66798b"><rect x="91" y="91" width="31" height="21"/><rect x="126" y="120" width="68" height="21"/><rect x="198" y="91" width="32" height="21"/><rect x="234" y="178" width="31" height="21"/></g>
+    <g fill="#c96343"><rect x="198" y="149" width="32" height="21"/><rect x="163" y="178" width="31" height="21"/></g>
+    <circle cx="274" cy="213" r="54" fill="#102540" stroke="#d16445" stroke-width="5"/>
+    <circle cx="274" cy="213" r="43" fill="#17304d" stroke="#d7be97" stroke-width="2"/>
+    <path stroke="#f0dbb7" stroke-width="5" stroke-linecap="round" d="M274 180v35l25 16"/>
+    <circle cx="274" cy="213" r="6" fill="#d16445"/>
+  </symbol>
+  <symbol id="scene-reservations" viewBox="0 0 360 300">
+    <path fill="#ceb38d" d="M55 54h224v190H55z"/><path fill="#f2dfbd" d="M72 39h224v190H72z"/>
+    <path fill="#b7a17e" d="M72 39h224v42H72z"/><g fill="#18314f"><rect x="98" y="25" width="9" height="39" rx="4"/><rect x="143" y="25" width="9" height="39" rx="4"/><rect x="188" y="25" width="9" height="39" rx="4"/><rect x="233" y="25" width="9" height="39" rx="4"/></g>
+    <g fill="#738694"><rect x="93" y="101" width="43" height="28"/><rect x="145" y="101" width="43" height="28"/><rect x="197" y="139" width="43" height="28"/></g><path fill="#ce6747" d="M93 139h95v28H93z"/>
+    <path fill="#17304e" d="M229 180h76v70h-76z"/><path fill="#f0dbb7" d="M249 176c0-25 38-25 38 0v17h-9v-17c0-14-20-14-20 0v17h-9z"/><rect x="240" y="188" width="54" height="48" rx="7" fill="#d06546"/>
+  </symbol>
+  <symbol id="scene-assessment" viewBox="0 0 360 300">
+    <path fill="#b79d78" d="M61 44h200v228H61z"/><path fill="#f1dfbd" d="M82 27h200v228H82z"/><path fill="#17304e" d="M127 16h109v36H127z"/>
+    <g fill="none" stroke="#17304e" stroke-width="7" stroke-linecap="round"><path d="M111 91l12 12 23-27M111 145l12 12 23-27M111 199l12 12 23-27M165 91h81M165 145h65M165 199h75"/></g>
+    <circle cx="272" cy="219" r="47" fill="#c96647"/><path fill="none" stroke="#f2dfbd" stroke-width="10" stroke-linecap="round" d="M247 220l18 18 34-42"/>
+  </symbol>
+  <symbol id="scene-tutoring" viewBox="0 0 360 300">
+    <path fill="#f1dfbd" d="M43 43h211v146H43z"/><path fill="#ccb48f" d="M66 64h211v146H66z"/><path fill="#17304e" d="M89 86h166v101H89z"/>
+    <circle cx="130" cy="123" r="25" fill="#d06747"/><path fill="#d06747" d="M88 177c4-31 19-47 42-47s38 16 42 47z"/>
+    <path fill="#f0dbb7" d="M180 104h57v39h-23l-22 18 5-18h-17z"/>
+    <circle cx="249" cy="225" r="34" fill="#17304e"/><path fill="none" stroke="#f0dbb7" stroke-width="8" d="M227 225l15 15 29-34"/>
+  </symbol>
+  <symbol id="scene-students" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M49 56h262v188H49z"/><path fill="#f0dbb7" d="M68 75h224v150H68z"/>
+    <g fill="#c96546"><circle cx="180" cy="117" r="33"/><path d="M125 206c5-48 23-72 55-72s50 24 55 72z"/></g>
+    <g fill="#728496"><circle cx="106" cy="138" r="22"/><path d="M70 204c3-32 15-49 36-49 18 0 30 12 36 37z"/><circle cx="254" cy="138" r="22"/><path d="M218 192c6-25 18-37 36-37 21 0 33 17 36 49h-72z"/></g>
+  </symbol>
+  <symbol id="scene-maintenance" viewBox="0 0 360 300">
+    <path fill="#d0b690" d="M49 69l223-35 33 210-223 35z"/><path fill="#17304e" d="M65 57h221v201H65z"/>
+    <path fill="#f0dbb7" d="M94 82h91v72H94z"/><g fill="#c86647"><circle cx="112" cy="104" r="7"/><circle cx="137" cy="104" r="7"/><circle cx="162" cy="104" r="7"/><rect x="108" y="125" width="58" height="9"/></g>
+    <path fill="#c86647" d="M224 76l23 23-81 98-31-31z"/><circle cx="141" cy="191" r="28" fill="#f0dbb7"/><path fill="#17304e" d="M128 180l25 25-13 13-25-25z"/>
+    <path fill="#f0dbb7" d="M211 167l53 53-19 19-53-53z"/>
+  </symbol>
+  <symbol id="scene-meetings" viewBox="0 0 360 300">
+    <ellipse cx="180" cy="205" rx="130" ry="53" fill="#17304e"/><ellipse cx="180" cy="193" rx="121" ry="45" fill="#cbb28d"/>
+    <g fill="#d06747"><circle cx="180" cy="72" r="26"/><circle cx="103" cy="101" r="21"/><circle cx="257" cy="101" r="21"/></g>
+    <g fill="#f0dbb7"><path d="M139 146c4-39 18-59 41-59s37 20 41 59z"/><path d="M70 151c3-30 14-45 33-45s30 15 33 45zM224 151c3-30 14-45 33-45s30 15 33 45z"/></g>
+    <rect x="140" y="172" width="80" height="47" fill="#687c8e"/>
+  </symbol>
+  <symbol id="scene-communications" viewBox="0 0 360 300">
+    <path fill="#f0dbb7" d="M43 52h208v127H126l-52 44 14-44H43z"/><path fill="#c8ad85" d="M126 113h191v122H207l-49 39 13-39h-45z"/>
+    <g fill="#17304e"><rect x="76" y="84" width="136" height="12"/><rect x="76" y="112" width="102" height="12"/><rect x="163" y="147" width="119" height="12"/><rect x="163" y="176" width="83" height="12"/></g>
+    <circle cx="278" cy="68" r="35" fill="#c96647"/><path fill="#f0dbb7" d="M272 48h12v27h-12zm0 34h12v12h-12z"/>
+  </symbol>
+  <symbol id="scene-calendar" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M47 42h258v220H47z"/><path fill="#f0dbb7" d="M66 59h220v184H66z"/><path fill="#c96747" d="M66 59h220v48H66z"/>
+    <g fill="#17304e"><rect x="102" y="38" width="11" height="42" rx="5"/><rect x="174" y="38" width="11" height="42" rx="5"/><rect x="246" y="38" width="11" height="42" rx="5"/></g>
+    <g fill="#718596"><rect x="88" y="128" width="36" height="28"/><rect x="135" y="128" width="36" height="28"/><rect x="182" y="128" width="36" height="28"/><rect x="229" y="167" width="36" height="28"/><rect x="135" y="206" width="36" height="24"/></g><rect x="182" y="167" width="36" height="28" fill="#c96747"/>
+  </symbol>
+  <symbol id="scene-documents" viewBox="0 0 360 300">
+    <path fill="#c7aa82" d="M42 75h128l25 29h123v150H42z"/><path fill="#17304e" d="M57 57h116l25 29h108v165H57z"/>
+    <path fill="#d2b990" d="M92 37h152l37 38v133H92z"/><path fill="#f0dbb7" d="M112 24h139l38 39v139H112z"/><path fill="#c7aa82" d="M251 24l38 39-42-4z"/>
+    <g fill="#17304e"><rect x="140" y="88" width="111" height="10"/><rect x="140" y="116" width="91" height="10"/><rect x="140" y="144" width="104" height="10"/></g>
+  </symbol>
+  <symbol id="scene-forms" viewBox="0 0 360 300">
+    <path fill="#cbb18a" d="M61 45h213v225H61z"/><path fill="#f0dbb7" d="M82 27h213v225H82z"/><path fill="#17304e" d="M126 17h125v38H126z"/>
+    <g fill="none" stroke="#17304e" stroke-width="7"><rect x="112" y="82" width="24" height="24"/><rect x="112" y="132" width="24" height="24"/><rect x="112" y="182" width="24" height="24"/><path d="M154 94h103M154 144h84M154 194h98"/></g><path fill="none" stroke="#c96647" stroke-width="8" d="M113 139l10 10 23-27"/>
+  </symbol>
+  <symbol id="scene-surveys" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M43 46h260v174H187l-61 50 16-50H43z"/><path fill="#f0dbb7" d="M70 72h205v119H70z"/>
+    <g fill="#718596"><rect x="96" y="98" width="147" height="10"/><rect x="96" y="124" width="109" height="10"/></g><g fill="#c96647"><circle cx="113" cy="163" r="12"/><circle cx="154" cy="163" r="12"/><circle cx="195" cy="163" r="12"/></g>
+    <path fill="#c5aa82" d="M250 189h69v68h-69z"/><path fill="none" stroke="#17304e" stroke-width="8" d="M265 224l12 12 27-32"/>
+  </symbol>
+  <symbol id="scene-virtual-classroom" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M40 43h280v180H40z"/><path fill="#f0dbb7" d="M58 61h244v143H58z"/><path fill="#718596" d="M153 223h54v24h49v16H104v-16h49z"/>
+    <path fill="#c96647" d="M115 112l65-34 65 34-65 35z"/><path fill="#17304e" d="M137 127v39c28 21 58 21 86 0v-39l-43 23z"/>
+    <circle cx="278" cy="78" r="25" fill="#c96647"/><path fill="#f0dbb7" d="M269 65l20 13-20 13z"/>
+  </symbol>
+  <symbol id="scene-academic-management" viewBox="0 0 360 300">
+    <path fill="#f0dbb7" d="M37 95l143-72 143 72-143 72z"/><path fill="#c96647" d="M64 112h232v30H64z"/><g fill="#17304e"><rect x="78" y="142" width="26" height="91"/><rect x="128" y="142" width="26" height="91"/><rect x="206" y="142" width="26" height="91"/><rect x="256" y="142" width="26" height="91"/><rect x="57" y="233" width="246" height="27"/></g>
+    <path fill="#c8ad85" d="M156 150h48v83h-48z"/><path fill="#17304e" d="M172 169h16v16h-16zm0 31h16v16h-16z"/>
+  </symbol>
+  <symbol id="scene-technology" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M38 44h284v184H38z"/><path fill="#f0dbb7" d="M57 63h246v145H57z"/><path fill="#718596" d="M153 228h54v25h52v16H101v-16h52z"/>
+    <path fill="none" stroke="#c96647" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" d="M135 103l-35 31 35 31M225 103l35 31-35 31M198 87l-36 94"/>
+    <circle cx="286" cy="226" r="41" fill="#c96647"/><g fill="#17304e"><rect x="279" y="199" width="14" height="54"/><rect x="259" y="219" width="54" height="14"/></g>
+  </symbol>
+  <symbol id="scene-administration" viewBox="0 0 360 300">
+    <path fill="#f0dbb7" d="M37 93L180 22l143 71-143 72z"/><path fill="#c96647" d="M58 108h244v29H58z"/><g fill="#17304e"><rect x="76" y="137" width="31" height="94"/><rect x="127" y="137" width="31" height="94"/><rect x="202" y="137" width="31" height="94"/><rect x="253" y="137" width="31" height="94"/><rect x="49" y="231" width="262" height="27"/></g>
+    <circle cx="277" cy="213" r="45" fill="#c7aa82"/><path fill="none" stroke="#17304e" stroke-width="9" d="M253 214l16 16 32-38"/>
+  </symbol>
+  <symbol id="scene-organization" viewBox="0 0 360 300">
+    <rect x="125" y="28" width="110" height="57" rx="9" fill="#c96647"/><path fill="#f0dbb7" d="M154 48h52v16h-52z"/>
+    <path fill="none" stroke="#c6ad87" stroke-width="13" d="M180 85v51M75 136h210M75 136v43M180 136v43M285 136v43"/>
+    <g fill="#17304e"><rect x="31" y="179" width="88" height="78" rx="9"/><rect x="136" y="179" width="88" height="78" rx="9"/><rect x="241" y="179" width="88" height="78" rx="9"/></g><g fill="#f0dbb7"><rect x="51" y="205" width="48" height="13"/><rect x="156" y="205" width="48" height="13"/><rect x="261" y="205" width="48" height="13"/></g>
+  </symbol>
+  <symbol id="scene-resources" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M45 50h128c28 0 44 15 44 44v164c0-28-16-43-44-43H45z"/><path fill="#c6ad87" d="M315 50H187v208c0-28 16-43 44-43h84z"/>
+    <g fill="#f0dbb7"><rect x="75" y="89" width="91" height="12"/><rect x="75" y="120" width="70" height="12"/><rect x="219" y="89" width="65" height="12"/><rect x="219" y="120" width="82" height="12"/></g>
+    <circle cx="268" cy="187" r="38" fill="#c96647"/><path fill="#f0dbb7" d="M245 181h46v12h-46z"/>
+  </symbol>
+  <symbol id="scene-general" viewBox="0 0 360 300">
+    <path fill="#17304e" d="M51 46h258v208H51z"/><path fill="#c8ad86" d="M76 72h208v156H76z"/><path fill="#f0dbb7" d="M105 97h150v106H105z"/>
+    <circle cx="180" cy="150" r="48" fill="#c96647"/><path fill="none" stroke="#f0dbb7" stroke-width="11" stroke-linecap="round" d="M180 121v58M151 150h58"/>
+  </symbol>
+</svg>
