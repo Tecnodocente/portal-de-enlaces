@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.4.0';
+  const LOADED_APP_VERSION = '2.4.1';
   const AUTO_VISUAL = 'AUTO';
   const READ_RETRY_DELAY_MS = 550;
   const RETRYABLE_READ_ACTIONS = Object.freeze({
@@ -259,12 +259,12 @@
     root.append(panel);
   }
 
-  function renderStatus(title, message, actionLabel) {
+  function renderStatus(title, message, actionLabel, actionHandler) {
     clear(root);
     root.className = 'state-screen';
     const panel = el('main', 'state-card state-card--message');
     panel.append(el('span', 'state-mark', '—'), el('h1', '', title), el('p', '', message));
-    if (actionLabel) panel.append(button(actionLabel, 'secondary-button', function () { renderEntry(); }));
+    if (actionLabel) panel.append(button(actionLabel, 'secondary-button', actionHandler || function () { renderEntry(); }));
     panel.append(el('p', 'version-chip', 'Versión ' + state.version));
     root.append(panel);
   }
@@ -279,11 +279,17 @@
       applyBootstrapData(data, false);
       renderApp();
     } catch (error) {
-      clearSession();
-      if (silent || error.code === 'SESSION_EXPIRED' || error.code === 'SESSION_INVALID') {
+      if (error.code === 'SESSION_EXPIRED' || error.code === 'SESSION_INVALID') {
+        clearSession();
         renderEntry();
       } else {
-        renderStatus('No se ha podido entrar', humanError(error), 'Volver');
+        const temporary = error.transient || error.code === 'NETWORK' || error.code === 'INVALID_RESPONSE';
+        renderStatus(
+          temporary ? 'Problema temporal de conexión' : 'No se ha podido cargar el portal',
+          humanError(error),
+          'Reintentar',
+          function () { bootstrap(fromLogin, false); }
+        );
       }
     }
   }

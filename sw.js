@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'portal-de-enlaces-';
-const SERVICE_WORKER_VERSION = '2.4.0';
+const SERVICE_WORKER_VERSION = '2.4.1';
 const CACHE_NAME = CACHE_PREFIX + SERVICE_WORKER_VERSION;
 const SHELL_URLS = [
   './',
@@ -28,7 +28,8 @@ const SHELL_URLS = [
   './assets/cards/espacios.webp',
   './assets/cards/formularios.webp',
   './assets/cards/documentacion.webp',
-  './assets/cards/semantic-symbols.svg'
+  './assets/cards/semantic-symbols.svg',
+  './assets/cards/semantic-scenes.svg'
 ];
 
 function canonicalCacheKey(request) {

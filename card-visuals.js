@@ -25,6 +25,18 @@
     return svg;
   }
 
+  function scene(symbol, className, spriteUrl) {
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', className);
+    svg.setAttribute('viewBox', '0 0 360 300');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    const use = document.createElementNS(NS, 'use');
+    use.setAttribute('href', spriteUrl + '#scene-' + symbol);
+    svg.append(use);
+    return svg;
+  }
+
   function titleClass(value) {
     const length = String(value || '').trim().length;
     if (length <= 24) return 'link-card__title--short';
@@ -38,6 +50,7 @@
     const profile = options.profile || { key: 'general', label: 'Enlace del centro' };
     const variation = options.variation || {};
     const spriteUrl = options.baseUrl + '/assets/cards/semantic-symbols.svg?v=' + encodeURIComponent(options.assetsVersion || '');
+    const scenesUrl = options.baseUrl + '/assets/cards/semantic-scenes.svg?v=' + encodeURIComponent(options.assetsVersion || '');
 
     card.classList.add('link-card--type-' + profile.key, 'link-card--variant-' + (variation.variant || 0));
     card.style.setProperty('--image-position-x', (variation.x || 50) + '%');
@@ -61,7 +74,7 @@
 
     const semantic = node('span', 'link-card__semantic');
     semantic.setAttribute('aria-hidden', 'true');
-    semantic.append(node('span', 'link-card__semantic-orbit'), icon(profile.key, 'link-card__semantic-mark', spriteUrl), node('span', 'link-card__semantic-accent'));
+    semantic.append(scene(profile.key, 'link-card__semantic-scene', scenesUrl));
 
     const body = node('span', 'link-card__body');
     const identity = node('span', 'link-card__identity');
@@ -70,10 +83,14 @@
     iconBox.append(icon(profile.key, 'link-card__icon-mark', spriteUrl));
     const identityText = node('span', 'link-card__identity-text');
     identityText.append(node('span', 'link-card__category', link.category || profile.label || 'Enlace'));
-    if (profile.service) identityText.append(node('span', 'link-card__service', profile.service));
+    if (profile.service) {
+      const service = profile.key === 'schedule' && profile.service === 'Séneca'
+        ? 'Séneca · Gestión académica'
+        : profile.service;
+      identityText.append(node('span', 'link-card__service', service));
+    }
     identity.append(iconBox, identityText);
     body.append(identity, node('span', 'link-card__title ' + titleClass(link.title), link.title));
-    if (link.description) body.append(node('span', 'link-card__description', link.description));
     body.append(node('span', 'link-card__action', 'Abrir enlace ↗'));
     card.append(media, semantic, body);
   }

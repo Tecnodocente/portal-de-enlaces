@@ -114,17 +114,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .link-card__image { object-fit: cover; object-position: var(--image-position-x) var(--image-position-y); opacity: .58; filter: saturate(.78) contrast(1.05); transform: scale(var(--image-scale)); transition: transform .5s ease; }
 .link-card__veil { background: linear-gradient(90deg, rgba(8,22,45,.99) 0%, rgba(12,31,59,.96) 42%, rgba(17,39,67,.69) 66%, rgba(11,24,44,.28) 100%), linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 14%, transparent), rgba(7,18,36,.25)); }
 .link-card--fallback .link-card__media { background: linear-gradient(145deg, #2e5c9e, #172846 55%, #a64932); }
-.link-card__semantic { position: absolute; z-index: -1; right: 4.2%; top: 11%; width: 39%; height: 78%; display: grid; place-items: center; color: #f4e5c9; transform: translate(var(--motif-x), var(--motif-y)) scale(var(--motif-scale)) rotate(var(--motif-rotate)); transition: transform .5s ease; }
-.link-card__semantic::before { content: ''; position: absolute; inset: 4%; border: 1px solid rgba(244,229,201,.22); border-radius: 30% 18% 26% 20%; background: linear-gradient(145deg, rgba(255,246,225,.16), rgba(10,27,51,.18)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 24px 55px rgba(4,12,25,.28); backdrop-filter: blur(3px); }
-.link-card__semantic-orbit { position: absolute; width: 74%; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--card-accent) 52%, transparent); border-radius: 50%; transform: translate(13%, -9%); }
-.link-card__semantic-orbit::after { content: ''; position: absolute; right: 5%; bottom: 8%; width: 14px; height: 14px; border-radius: 50%; background: var(--card-accent); box-shadow: 0 0 24px color-mix(in srgb, var(--card-accent) 65%, transparent); }
-.link-card__semantic-mark { position: relative; width: 78%; height: 78%; fill: none; stroke: currentColor; stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; opacity: .94; filter: drop-shadow(0 12px 18px rgba(3,12,25,.38)); }
-.link-card__semantic-accent { position: absolute; left: 12%; bottom: 8%; width: 34%; height: 5px; border-radius: 999px; background: var(--card-accent); }
-.link-card--variant-1 .link-card__semantic::before { border-radius: 18% 30% 18% 28%; transform: rotate(2deg); }
-.link-card--variant-2 .link-card__semantic-orbit { transform: translate(-12%, 8%); }
-.link-card--variant-3 .link-card__semantic-accent { left: auto; right: 9%; width: 43%; }
-.link-card--variant-4 .link-card__semantic::before { inset: 8% 1% 1% 8%; }
-.link-card--variant-5 .link-card__semantic-mark { width: 84%; height: 84%; }
+.link-card__semantic { position: absolute; z-index: -1; right: 1.5%; top: 5%; width: 48%; height: 90%; display: grid; place-items: center; transform: translate(var(--motif-x), var(--motif-y)) scale(var(--motif-scale)) rotate(var(--motif-rotate)); transition: transform .5s ease; }
+.link-card__semantic-scene { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 20px 22px rgba(3,12,25,.38)); }
 .link-card__body { position: absolute; inset: 0 auto 0 0; width: 64%; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(32px, 4vw, 54px); color: #fff8e9; }
 .link-card__identity { display: flex; align-items: center; gap: 11px; margin-bottom: 19px; }
 .link-card__icon { display: inline-grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border: 1px solid rgba(255,248,233,.38); border-radius: 13px; background: color-mix(in srgb, var(--card-accent) 58%, rgba(12,24,43,.68)); color: #fff8e9; box-shadow: 0 8px 22px rgba(5,13,27,.2); }
@@ -288,14 +279,16 @@ textarea.field__input { resize: vertical; }
 }
 
 @media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
-  .welcome { margin-top: 18px; }
-  .carousel { margin-top: 8px; }
-  .carousel__viewport { height: 426px; }
-  .link-card { width: min(80vw, 640px); height: 394px; top: 12px; }
+  .app { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .app-main { min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; }
+  .welcome { flex: 0 0 auto; margin: 0 auto; padding-block: clamp(10px, 1.8dvh, 22px); }
+  .carousel { flex: 0 0 auto; margin: 0 auto; }
+  .carousel__viewport { height: clamp(438px, 39dvh, 500px); }
+  .link-card { width: min(84vw, 680px); height: clamp(410px, 36dvh, 464px); top: 50%; margin-top: calc(clamp(410px, 36dvh, 464px) / -2); }
   .link-card__body { width: 63%; padding: clamp(27px, 4.6vw, 38px); }
-  .link-card__semantic { right: 2%; top: 13%; width: 40%; height: 74%; }
+  .link-card__semantic { right: 0; top: 6%; width: 49%; height: 88%; }
   .carousel__controls { margin-top: 0; }
-  .app-footer { margin-top: 24px; }
+  .app-footer { margin-top: 0; padding-top: 12px; }
 }
 
 @media (max-width: 430px) {
