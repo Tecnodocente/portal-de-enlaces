@@ -3,12 +3,12 @@
     {
       "file": "alumnado.webp",
       "label": "Alumnado",
-      "categories": ["alumnado", "estudiante", "tutoría", "orientación"]
+      "categories": ["alumnado", "estudiante", "tutoría", "orientación", "grupo", "matrícula"]
     },
     {
       "file": "incidencias.webp",
       "label": "Incidencias",
-      "categories": ["incidencia", "aviso", "parte"]
+      "categories": ["incidencia", "aviso", "parte", "disciplina", "sanción"]
     },
     {
       "file": "mantenimiento.webp",
@@ -18,7 +18,7 @@
     {
       "file": "comunidad.webp",
       "label": "Convivencia",
-      "categories": ["convivencia", "comunidad", "familia", "claustro"]
+      "categories": ["convivencia", "comunidad", "familia", "claustro", "mediación", "coeducación"]
     },
     {
       "file": "espacios.webp",
@@ -28,12 +28,12 @@
     {
       "file": "organizacion.webp",
       "label": "Organización",
-      "categories": ["organización", "gestión", "calendario", "secretaría"]
+      "categories": ["organización", "gestión", "calendario", "secretaría", "horario", "Séneca", "evaluación"]
     },
     {
       "file": "formularios.webp",
       "label": "Formularios",
-      "categories": ["formulario", "encuesta", "solicitud"]
+      "categories": ["formulario", "encuesta", "solicitud", "cuestionario", "inscripción", "Google Forms"]
     },
     {
       "file": "recursos.webp",
@@ -43,12 +43,12 @@
     {
       "file": "digital.webp",
       "label": "Aplicaciones externas",
-      "categories": ["digital", "tic", "plataforma", "aplicación", "herramienta"]
+      "categories": ["digital", "tic", "plataforma", "aplicación", "herramienta", "Moodle", "Canva"]
     },
     {
       "file": "documentacion.webp",
       "label": "Documentación",
-      "categories": ["documentación", "documento", "archivo", "normativa"]
+      "categories": ["documentación", "documento", "archivo", "normativa", "instrucciones", "protocolo", "Google Drive", "Google Docs", "Google Sheets"]
     }
   ]
 }
