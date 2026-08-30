@@ -116,12 +116,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .link-card--fallback .link-card__media { background: linear-gradient(135deg, var(--card-accent), color-mix(in srgb, var(--card-accent) 66%, #f4efe5)); }
 .link-card__semantic { position: absolute; z-index: -1; left: 50%; bottom: 10%; width: 22%; display: block; opacity: .72; background: radial-gradient(circle, rgba(255,255,255,.10), transparent 70%); transform: translateX(-50%); }
 .link-card__semantic-scene { display: block; width: 100%; height: auto; overflow: visible; }
-.link-card__body { position: absolute; inset: 0 auto 0 0; width: 52%; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(30px, 3.6vw, 48px) clamp(16px, 3cqi, 28px) 20cqi; color: #fff8e9; text-shadow: 0 2px 12px rgba(5,15,29,.42); }
+.link-card__body { position: absolute; inset: 0 auto 0 0; width: 52%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; align-items: start; justify-items: start; padding: clamp(30px, 3.6vw, 48px) clamp(16px, 3cqi, 28px); color: #fff8e9; text-shadow: 0 2px 12px rgba(5,15,29,.42); }
 .link-card__identity { display: flex; align-items: center; gap: 11px; margin-bottom: 19px; }
 .link-card__identity-text { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .link-card__category { width: fit-content; padding-bottom: 3px; border-bottom: 2px solid color-mix(in srgb, var(--card-accent) 82%, #fff8e9); color: color-mix(in srgb, var(--card-tint) 72%, #fff8e9); font-size: .73rem; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
 .link-card__service { color: rgba(255,248,233,.67); font-size: .69rem; font-weight: 700; letter-spacing: .04em; }
-.link-card__title { display: block; flex: 0 0 auto; width: 100%; overflow: visible; font-family: Georgia, "Times New Roman", serif; line-height: 1.04; letter-spacing: -.035em; white-space: normal; word-break: normal; overflow-wrap: normal; hyphens: none; text-wrap: balance; }
+.link-card__title { display: block; align-self: start; min-width: 0; width: 100%; overflow: visible; font-family: Georgia, "Times New Roman", serif; line-height: 1.04; letter-spacing: -.035em; white-space: normal; word-break: normal; overflow-wrap: normal; hyphens: none; text-wrap: balance; }
 .link-card__title--short { font-size: clamp(2.6rem, 8.2cqi, 4.25rem); }
 .link-card__title--medium { font-size: clamp(2rem, 6cqi, 3rem); }
 .link-card__title--long { font-size: clamp(30px, 4.7cqi, 2.35rem); }
@@ -235,7 +235,7 @@ textarea.field__input { resize: vertical; }
   .welcome { margin-top: 18px; }
   .carousel__viewport { height: 414px; }
   .link-card { width: 84vw; height: 382px; min-height: 0; top: 12px; }
-  .link-card__body { width: 55%; padding: 22px 16px 20cqi; }
+  .link-card__body { width: 55%; padding: 22px 16px; }
   .link-card__semantic { opacity: .68; }
   .link-card__identity { margin-bottom: 13px; }
   .link-card__title--short { font-size: clamp(2.25rem, 8.7vw, 2.9rem); }
@@ -263,7 +263,7 @@ textarea.field__input { resize: vertical; }
   .carousel { margin-top: 4px; }
   .carousel__viewport { height: 378px; }
   .link-card { width: min(68vw, 680px); height: 346px; top: 12px; }
-  .link-card__body { padding: clamp(22px, 3vw, 34px) clamp(16px, 3cqi, 28px) 20cqi; }
+  .link-card__body { padding: clamp(22px, 3vw, 34px) clamp(16px, 3cqi, 28px); }
   .link-card__identity { margin-bottom: 12px; }
   .link-card__action { margin-top: 13px; }
   .link-card__title--short { font-size: clamp(2.4rem, 4.1vw, 3.3rem); }
@@ -280,7 +280,7 @@ textarea.field__input { resize: vertical; }
   .carousel { flex: 0 0 auto; margin: 0 auto; }
   .carousel__viewport { height: clamp(438px, 39dvh, 500px); }
   .link-card { width: min(84vw, 680px); height: clamp(410px, 36dvh, 464px); top: 50%; margin-top: calc(clamp(410px, 36dvh, 464px) / -2); }
-  .link-card__body { width: 53%; padding: clamp(25px, 4vw, 34px) clamp(16px, 3cqi, 28px) 20cqi; }
+  .link-card__body { width: 53%; padding: clamp(25px, 4vw, 34px) clamp(16px, 3cqi, 28px); }
   .carousel__controls { margin-top: 0; }
   .app-footer { margin-top: 0; padding-top: 12px; }
 }
@@ -288,7 +288,7 @@ textarea.field__input { resize: vertical; }
 @media (max-width: 430px) {
   .header-tools .header-button:not(.header-button--accent) { order: 3; }
   .link-card { width: 87vw; height: 372px; }
-  .link-card__body { padding: 23px 16px 20cqi; }
+  .link-card__body { padding: 23px 16px; }
   .link-card__identity { margin-bottom: 10px; }
   .link-card__description { -webkit-line-clamp: 1; }
   .carousel__viewport { height: 404px; }
