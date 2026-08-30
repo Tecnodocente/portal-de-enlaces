@@ -19,6 +19,29 @@
     Object.freeze({ accent: '#9BB7A4', tint: '#9BB7A4' }),
     Object.freeze({ accent: '#D6A3B8', tint: '#D6A3B8' })
   ]);
+  // Painted bounds of the current sprite, including strokes; no transparent canvas margin.
+  const SCENE_BOUNDS = Object.freeze({
+    incidents: [45, 25, 272, 243],
+    schedule: [46, 19, 284.5, 250.5],
+    reservations: [55, 25, 250, 225],
+    assessment: [61, 16, 258, 256],
+    tutoring: [43, 43, 240, 216],
+    students: [49, 56, 262, 188],
+    maintenance: [49, 34, 256, 245],
+    meetings: [50, 46, 260, 212],
+    communications: [43, 33, 274, 241],
+    calendar: [47, 38, 258, 224],
+    documents: [42, 24, 276, 230],
+    forms: [61, 17, 234, 253],
+    surveys: [43, 46, 276, 224],
+    'virtual-classroom': [40, 43, 280, 220],
+    'academic-management': [37, 23, 286, 237],
+    technology: [38, 44, 289, 225],
+    administration: [37, 22, 286, 236],
+    organization: [31, 28, 298, 229],
+    resources: [45, 50, 270, 208],
+    general: [51, 46, 258, 208]
+  });
   let renderedCardCount = 0;
 
   function stableHash(value) {
@@ -51,10 +74,16 @@
   function scene(symbol, className, spriteUrl) {
     const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', className);
-    svg.setAttribute('viewBox', '0 0 360 300');
+    const bounds = SCENE_BOUNDS[symbol] || SCENE_BOUNDS.general;
+    svg.setAttribute('viewBox', bounds.join(' '));
+    svg.setAttribute('width', String(bounds[2]));
+    svg.setAttribute('height', String(bounds[3]));
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
     const use = document.createElementNS(NS, 'use');
+    // Keep the symbol's original coordinate system inside the tightly framed SVG.
+    use.setAttribute('width', '360');
+    use.setAttribute('height', '300');
     use.setAttribute('href', spriteUrl + '#scene-' + symbol);
     svg.append(use);
     return svg;
