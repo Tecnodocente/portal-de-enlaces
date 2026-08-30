@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.4.6';
+  const LOADED_APP_VERSION = '2.4.7';
   const AUTO_VISUAL = 'AUTO';
   const READ_RETRY_DELAY_MS = 550;
   const RETRYABLE_READ_ACTIONS = Object.freeze({
