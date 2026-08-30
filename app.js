@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.4.7';
+  const LOADED_APP_VERSION = '2.4.8';
   const AUTO_VISUAL = 'AUTO';
   const READ_RETRY_DELAY_MS = 550;
   const RETRYABLE_READ_ACTIONS = Object.freeze({
@@ -303,6 +303,12 @@
     state.current = preservedIndex >= 0 ? preservedIndex : 0;
   }
 
+  function nombreVisibleSaludo(fullName) {
+    const words = String(fullName || '').trim().split(/\s+/);
+    if (words.length <= 2) return words[0];
+    return words.slice(0, -2).join(' ');
+  }
+
   function renderApp() {
     clear(root);
     root.className = 'app';
@@ -322,7 +328,7 @@
 
     const main = el('main', 'app-main');
     const welcome = el('div', 'welcome');
-    welcome.append(el('p', 'eyebrow', 'Hola, ' + state.user.name), el('h2', 'welcome__title', '¿Dónde necesitas ir?'));
+    welcome.append(el('p', 'eyebrow', 'Hola, ' + nombreVisibleSaludo(state.user.name)), el('h2', 'welcome__title', '¿Dónde necesitas ir?'));
     main.append(welcome);
 
     if (!state.links.length) {
