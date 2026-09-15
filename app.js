@@ -2,7 +2,7 @@
   'use strict';
 
   const SESSION_KEY = 'portal-session-token-v2';
-  const LOADED_APP_VERSION = '2.4.8';
+  const LOADED_APP_VERSION = '2.4.9';
   const AUTO_VISUAL = 'AUTO';
   const READ_RETRY_DELAY_MS = 550;
   const RETRYABLE_READ_ACTIONS = Object.freeze({
@@ -544,7 +544,103 @@
     return resolveVisual(!visual || visual.toUpperCase() === AUTO_VISUAL ? semanticProfile(link).file : visual);
   }
 
+  // Estado transitorio del visor: no se guarda en localStorage ni en los datos.
+  const driveDialog = document.getElementById('drive-viewer');
+  const driveOutside = document.getElementById('drive-viewer-outside');
+  const DRIVE_HISTORY_KEY = 'portalDriveViewer';
+  const driveViewer = { token: '', sequence: 0, opener: null, returning: false };
+
+  function drivePreviewUrl(value) {
+    try {
+      const url = new URL(String(value || ''));
+      if (url.protocol !== 'https:' || url.hostname !== 'drive.google.com' ||
+          url.port || url.username || url.password) return '';
+      const match = /^\/file\/d\/([A-Za-z0-9_-]+)\/(?:view|preview)\/?$/.exec(url.pathname);
+      let id = match ? match[1] : '';
+      if (!id && url.pathname === '/open' && url.searchParams.getAll('id').length === 1) {
+        id = url.searchParams.get('id');
+      }
+      if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) return '';
+      const preview = new URL('https://drive.google.com/file/d/' + id + '/preview');
+      const keys = url.searchParams.getAll('resourcekey');
+      if (keys.length > 1 || (keys.length === 1 && !/^[A-Za-z0-9_-]+$/.test(keys[0]))) return '';
+      if (keys.length) preview.searchParams.set('resourcekey', keys[0]);
+      return preview.href;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function clearDriveHistoryMarker() {
+    if (!history.state || !history.state[DRIVE_HISTORY_KEY]) return;
+    const cleanState = Object.assign({}, history.state);
+    delete cleanState[DRIVE_HISTORY_KEY];
+    history.replaceState(Object.keys(cleanState).length ? cleanState : null, '');
+  }
+
+  function closeDriveViewer(fromHistory) {
+    const token = driveViewer.token;
+    if (!token) return;
+    const ownsEntry = history.state && history.state[DRIVE_HISTORY_KEY] === token;
+    const opener = driveViewer.opener;
+    driveViewer.token = '';
+    driveViewer.opener = null;
+    // Bloquear reaperturas hasta recibir el popstate de nuestro único back().
+    driveViewer.returning = !fromHistory && Boolean(ownsEntry);
+    const frame = document.getElementById('drive-viewer-frame');
+    frame.removeAttribute('src');
+    // Destruir el contexto anterior evita reutilizar su navegación al reabrir.
+    frame.replaceWith(frame.cloneNode(false));
+    driveOutside.removeAttribute('href');
+    if (driveDialog.open) driveDialog.close();
+    if (opener && opener.isConnected) opener.focus({ preventScroll: true });
+    if (driveViewer.returning) history.back();
+  }
+
+  function openDriveViewer(originalUrl, previewUrl) {
+    if (driveDialog.open || driveViewer.returning) return;
+    driveViewer.opener = document.activeElement;
+    driveViewer.token = String(Date.now()) + '-' + (++driveViewer.sequence);
+    try {
+      const entry = Object.assign({}, history.state);
+      entry[DRIVE_HISTORY_KEY] = driveViewer.token;
+      history.pushState(entry, '');
+      driveOutside.href = String(originalUrl);
+      driveDialog.showModal();
+      document.getElementById('drive-viewer-frame').src = previewUrl;
+    } catch (_) {
+      closeDriveViewer(false);
+      showToast('No se ha podido abrir el visor. Inténtalo de nuevo.', true);
+    }
+  }
+
+  function initializeDriveViewer() {
+    // Una recarga o Adelante no debe resucitar un visor ya cerrado.
+    clearDriveHistoryMarker();
+    document.getElementById('drive-viewer-close').addEventListener('click', function () {
+      closeDriveViewer(false);
+    });
+    driveDialog.addEventListener('cancel', function (event) {
+      event.preventDefault();
+      closeDriveViewer(false);
+    });
+    window.addEventListener('popstate', function () {
+      driveViewer.returning = false;
+      if (driveViewer.token) closeDriveViewer(true);
+      clearDriveHistoryMarker();
+    });
+    // renderApp() conserva el visor; las salidas reales de la pantalla lo limpian.
+    new MutationObserver(function () {
+      if (!root.classList.contains('app')) closeDriveViewer(false);
+    }).observe(root, { attributes: true, attributeFilter: ['class'] });
+  }
+
   function openExternal(url) {
+    const previewUrl = drivePreviewUrl(url);
+    if (previewUrl) {
+      openDriveViewer(url, previewUrl);
+      return;
+    }
     if (!/^https:\/\//i.test(String(url || ''))) {
       showToast('Este enlace no tiene una dirección segura.', true);
       return;
@@ -1505,5 +1601,6 @@
   setInterval(function () { checkRemoteVersion(false); }, VERSION_CHECK_MS);
   setInterval(function () { checkDataRevision(false); }, DATA_CHECK_MS);
 
+  initializeDriveViewer();
   initializeApp();
 })();

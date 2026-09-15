@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Portal de enlaces">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; worker-src 'self'; manifest-src 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; frame-src https://drive.google.com; worker-src 'self'; manifest-src 'self'; form-action 'self'">
   <title>Portal de enlaces</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./assets/branding/favicon.png">
@@ -24,6 +24,18 @@
       <strong>Preparando tu portal…</strong>
     </div>
   </div>
+  <dialog id="drive-viewer" class="drive-viewer" aria-labelledby="drive-viewer-title">
+    <div class="drive-viewer__layout">
+      <header class="drive-viewer__header">
+        <h2 id="drive-viewer-title" class="drive-viewer__title">Visor de archivos</h2>
+        <div class="drive-viewer__actions">
+          <a id="drive-viewer-outside" class="drive-viewer__outside" target="_blank" rel="noopener noreferrer">Abrir fuera</a>
+          <button id="drive-viewer-close" class="drive-viewer__close" type="button" autofocus>Cerrar</button>
+        </div>
+      </header>
+      <iframe id="drive-viewer-frame" class="drive-viewer__frame" title="Vista previa del archivo de Google Drive" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </dialog>
   <noscript>Necesitas activar JavaScript para usar el Portal de enlaces.</noscript>
   <script src="./config.js" defer></script>
   <script src="./portal-core.js" defer></script>
